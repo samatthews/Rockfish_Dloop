@@ -1,0 +1,414 @@
+---
+title: "02_BasinComparison"
+output: html_document
+date: "2025-02-11"
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(metagMisc)
+library(phyloseq)
+set.seed(110011)
+theme_set(theme_bw())
+theme_update(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+#--merge into single MiSeq sample per field sample
+```{r}
+load("/Users/stephaniematthews/Documents/Rockfish/Conservation_Letters/Data/Rockfish_phyloseq.RData")
+field_curated_MDL <- subset_taxa(field_curated_MDL, Species != "Sebastes (unknown rockfish)")
+nsamples(field_curated_MDL)
+table(sample_data(field_curated_MDL)$Instrument)
+
+sample_data(field_curated_MDL)$FieldSampleID <-  gsub("MeredithDloop", "MDL", sample_names(field_curated_MDL))
+sample_data(field_curated_MDL)$FieldSampleID <-  gsub(".dil", "", sample_data(field_curated_MDL)$FieldSampleID)
+sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Site %in% c("Possession", "Mulkiteo")] <- "AI"
+sample_data(field_curated_MDL)$Site[sample_data(field_curated_MDL)$Site %in% c("Possession")] <- "AI-3" #defining these using unsampled site names
+sample_data(field_curated_MDL)$Site[sample_data(field_curated_MDL)$Site %in% c("Mulkiteo")] <- "AI-4"#defining these using unsampled site names
+sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Site %in% c("HC-8", "HC-9")] <- "AI"#move HC 8 and 9 to AI, since they're more similar to AI 
+sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Basin %in% c("AI")] <- "Puget Sound"
+sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Basin %in% c("HC")] <- "Hood Canal"
+
+#field <- subset_samples(field_curated_MDL, Type == "field")
+field <- field_curated_MDL
+field <- subset_samples(field, FieldSampleID != "MDL.31A")
+
+#field_single <- merge_samples(field, group = "FieldSampleID")
+field_single <- speedyseq::merge_samples2(field, "WaterSample")
+#field_single <- subset_samples(field_single, sample_sums(field_single) > 0)
+field_single <- tax_glom(field_single, taxrank = "Species")
+field_single <- subset_taxa(field_single, taxa_sums(field_single) > 0)
+taxa_names(field_single) <- tax_table(field_single)[,"Species"]
+
+
+```
+
+#Figure 3
+#build our own barplot
+```{r}
+
+mycols_seb <- c("#0000EE", "#EE3B3B", "#006400", "#FF7F00", "#9932CC", "#FFD700", "#00B2EE", "#FF6EB4")
+names(mycols_seb) <- names(sort(taxa_sums(field_single), decreasing = T))
+
+# Transform to relative abundance
+AID_norm <- transform_sample_counts(field_single, function(x) 100 * x/sum(x))
+
+# Compile taxa by Order (filtering out low abundance taxa)
+AID_Orders <- AID_norm  %>%
+  tax_glom(taxrank = "Species") %>%                     # agglomerate taxa at order level
+  psmelt()                                     # Melt phyloseq object to long format for producing graphics with 
+
+# reorder based on phylogeny
+AID_barchart <- AID_Orders[with(AID_Orders, order(Phylum,Class,Order,Species)),]
+
+# lock in Order level
+AID_barchart$Species <- factor(AID_barchart$Species, levels = unique(AID_barchart$Species))
+
+AID_barchart_empties <- AID_barchart %>% 
+  distinct(Sample, .keep_all = T) %>%
+  mutate(Abundance = 100) %>%
+  mutate(Empty = 0)
+
+p <- ggplot(AID_barchart, aes(x = Sample, y = Abundance, fill = Species)) + 
+  geom_bar(stat = "identity", position = "stack", 
+    color = "black", show.legend = TRUE, width = 0.5, linewidth = 0.1) + 
+  theme(axis.text.x = element_text(angle = -90, hjust = 0)) + 
+  facet_grid(Basin~., scales = "free", space = "free") + 
+  scale_fill_manual(values = mycols_seb)  + 
+  ylab("Proportion reads") +
+  xlab("eDNA sample") +
+  scale_x_discrete(expand = c(0,0), breaks = AID_barchart$Sample, labels = AID_barchart$Site) + 
+  theme(
+    axis.text.y = element_blank(),
+  ) + 
+  coord_flip()
+
+p
+p +
+  geom_col(data = AID_barchart_empties, aes(x = Sample, y = Abundance),
+           position = "stack", 
+    color = "black", show.legend = TRUE, alpha = 0.1, width = 0.5, linewidth = 0.1) 
+
+p +  geom_col(data = AID_barchart_empties, aes(x = Sample, y = Empty),
+           position = "stack", 
+    color = "black", show.legend = TRUE, alpha = 0.1, width = 0.5, linewidth = 0.1) 
+
+
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250212_emptyzeros.pdf", height =3, width = 10)
+p
+dev.off()
+jpeg(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250212_emptyzeros.jpeg", height =3, width = 10, unit = "in", quality = 100, res = 300)
+p
+dev.off()
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250212_tallzeros.pdf", height =3, width = 10)
+p + geom_col(data = AID_barchart_empties, aes(x = Sample, y = Abundance),
+           position = "stack", 
+    color = "black", show.legend = TRUE, alpha = 0.1, width = 0.5, linewidth = 0.1) 
+dev.off()
+jpeg(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250212_tallzeros.jpeg", height =3, width = 10, unit = "in", quality = 100, res = 300)
+p + geom_col(data = AID_barchart_empties, aes(x = Sample, y = Abundance),
+           position = "stack", 
+    color = "black", show.legend = TRUE, alpha = 0.1, width = 0.5, linewidth = 0.1) 
+dev.off()
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250212_shortzeros.pdf", height =3, width = 10)
+p +  geom_col(data = AID_barchart_empties, aes(x = Sample, y = Empty),
+           position = "stack", 
+    color = "black", show.legend = TRUE, alpha = 0.1, width = 0.5, linewidth = 0.1) 
+dev.off()
+jpeg(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250212_shortzeros.jpeg", height =3, width = 10, unit = "in", quality = 100, res = 300)
+p +  geom_col(data = AID_barchart_empties, aes(x = Sample, y = Empty),
+           position = "stack", 
+    color = "black", show.legend = TRUE, alpha = 0.1, width = 0.5, linewidth = 0.1) 
+dev.off()
+
+
+```
+
+##plot  replicates
+```{r}
+AID_barchart_HC <- AID_barchart[AID_barchart$Basin == "Hood Canal",]
+
+
+ggplot(AID_barchart_HC, aes(x = Sample, y = Abundance, fill = Species)) + 
+  geom_bar(stat = "identity", position = "stack", 
+    color = "black", show.legend = TRUE, width = 0.5, linewidth = 0.1) + 
+  theme(axis.text.x = element_text(angle = -90, hjust = 0)) + 
+  facet_wrap(Site~Instrument, scales = "free", drop = T) + 
+  scale_fill_manual(values = mycols_seb)  + 
+  ylab("Proportion reads") +
+  xlab("eDNA sample")+
+  geom_col(data = AID_barchart_empties[AID_barchart_empties$Basin == "Hood Canal",], aes(x = Sample, y = Abundance),
+           position = "stack", 
+    color = "black", show.legend = TRUE, alpha = 0.1, width = 0.5, linewidth = 0.1)  #+
+#  scale_x_discrete(expand = c(0,0), breaks = AID_barchart_HC$Distance_from_bottom, labels = AID_barchart_HC$Distance_from_bottom) + 
+ # theme(
+ #   axis.text.y = element_blank(),
+ # ) + 
+  #coord_flip()
+
+
+
+AID_barchart_AI <- AID_barchart[AID_barchart$Basin == "Puget Sound",]
+AID_barchart_AI <- AID_barchart_AI[AID_barchart_AI]
+
+ggplot(AID_barchart_AI, aes(x = Sample, y = Abundance, fill = Species)) + 
+  geom_bar(stat = "identity", position = "stack", 
+    color = "black", show.legend = TRUE, width = 0.5, linewidth = 0.1) + 
+  theme(axis.text.x = element_text(angle = -90, hjust = 0)) + 
+  facet_wrap(Site~Instrument, scales = "free", drop = F) + 
+  scale_fill_manual(values = mycols_seb)  + 
+  ylab("Proportion reads") +
+  xlab("eDNA sample")+
+  geom_col(data = AID_barchart_empties[AID_barchart_empties$Basin == "Admiralty Inlet",], aes(x = Sample, y = Abundance),
+           position = "stack", 
+    color = "black", show.legend = TRUE, alpha = 0.1, width = 0.5, linewidth = 0.1)  #+
+#  scale_x_discrete(expand = c(0,0), breaks = AID_barchart_HC$Distance_from_bottom, labels = AID_barchart_HC$Distance_from_bottom) + 
+ # theme(
+ #   axis.text.y = element_blank(),
+ # ) + 
+  #coord_flip()
+```
+
+
+## make a heatmap instead
+```{r heatmpa}
+field_prop <- phyloseq_standardize_otu_abundance(field_single, "total")
+field_pa <- phyloseq_standardize_otu_abundance(field_single, "pa")
+
+
+field_prop_dataframe <- field_prop  %>%
+  psmelt()                                     # Melt phyloseq object to long format for producing graphics with 
+field_pa_dataframe <- field_pa  %>%
+  psmelt()  
+
+field_prop_dataframe$Abundance[is.nan(field_prop_dataframe$Abundance)] <- 0
+field_pa_dataframe$Abundance[is.nan(field_pa_dataframe$Abundance)] <- 0
+
+field_pa_dataframe$Abundance_binary[(field_pa_dataframe$Abundance) == 0] <- "Absent"
+field_pa_dataframe$Abundance_binary[(field_pa_dataframe$Abundance) == 1] <- "Present"
+field_pa_dataframe$Basin[field_pa_dataframe$Basin == "Hood Canal"] <- "Hood Canal (n=27)"
+field_pa_dataframe$Basin[field_pa_dataframe$Basin == "Puget Sound"] <- "Puget Sound (n=93)"
+
+
+p <- ggplot(field_prop_dataframe, aes(x = Sample, y = Species, fill = Abundance)) + 
+  geom_tile() + 
+  scale_fill_viridis_c(name = "% reads") +
+  facet_grid(.~Basin, scales = "free", space = "free") + 
+  xlab("eDNA sample") + 
+  theme(axis.text.x = element_blank()) 
+p
+
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250223_heatmap.pdf", height =2.5, width = 6.5)
+p 
+dev.off()
+
+jpeg(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250223_heatmap.jpeg", height =2.5, width = 6.5, unit = "in", quality = 100, res = 300)
+p 
+dev.off()
+
+
+
+p <- ggplot(field_pa_dataframe, aes(x = Sample, y = Species, fill = Abundance_binary)) + 
+  geom_tile() + 
+  scale_fill_manual(name = "Detection", values = c("#483D8B", "#FFC125")) +
+  facet_grid(.~Basin, scales = "free", space = "free") + 
+  xlab("eDNA sample") + 
+  theme(axis.text.x = element_blank()) 
+p
+
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250223_heatmap_PA.pdf", height =2, width = 6.5)
+p 
+dev.off()
+
+jpeg(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250223_heatmap_PA.jpeg", height =2, width = 6.5, unit = "in", quality = 100, res = 300)
+p 
+dev.off()
+
+
+
+p <- ggplot(field_pa_dataframe, aes(x = Sample, y = Species, fill = Abundance_binary)) + 
+  geom_tile() + 
+  scale_fill_manual(name = "Detection", values = c("#483D8B", "#FFC125")) +
+  facet_grid(.~Basin, scales = "free", space = "free") + 
+  xlab("eDNA sample") + 
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_text(colour = c("darkblue", "darkblue", "black", "darkblue", "darkblue", "darkblue", "darkred"),
+                                   face = c("bold", "bold", "plain", "bold", "bold", "bold", "bold")))
+p
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250223_heatmap_PA_cons-stat.pdf", height =2, width = 6.5)
+p 
+dev.off()
+
+jpeg(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Figure3_20250223_heatmap_PA_cons-stat.jpeg", height =2, width = 6.5, unit = "in", quality = 100, res = 300)
+p 
+dev.off()
+
+```
+
+##count number of samples/stations each species is detected in, overall and by basin
+```{r}
+#by sample, sample + basin
+sample_pa <- phyloseq_standardize_otu_abundance(field_single, "pa")
+sample_pa_dataframe <- sample_pa  %>%
+  psmelt()  
+sample_pa_dataframe$Abundance[is.nan(sample_pa_dataframe$Abundance)] <- 0
+sample_pa_dataframe$Abundance_binary[(sample_pa_dataframe$Abundance) == 0] <- "Absent"
+sample_pa_dataframe$Abundance_binary[(sample_pa_dataframe$Abundance) == 1] <- "Present"
+
+sample_pa_dataframe %>% 
+  group_by(Species) %>%
+  count(Abundance_binary) %>%
+  print(n = 25)
+sample_pa_dataframe %>% 
+  group_by(Species, Basin) %>%
+  count(Abundance_binary) %>%
+  print(n = 25)
+
+#by site
+station_pa <- phyloseq_standardize_otu_abundance(merge_samples(field_single, group = "Site"), "pa")
+station_pa_dataframe <- station_pa  %>%
+  psmelt()  
+station_pa_dataframe$Abundance[is.nan(station_pa_dataframe$Abundance)] <- 0
+station_pa_dataframe$Abundance_binary[(station_pa_dataframe$Abundance) == 0] <- "Absent"
+station_pa_dataframe$Abundance_binary[(station_pa_dataframe$Abundance) == 1] <- "Present"
+
+station_pa_dataframe %>% 
+  group_by(Species) %>%
+  count(Abundance_binary) %>%
+  print(n = 25)
+
+#by site + basin
+station_pa <- phyloseq_standardize_otu_abundance(merge_samples(subset_samples(field_single, Basin == "Hood Canal"), group = "Site"), "pa")
+station_pa_dataframe <- station_pa  %>%
+  psmelt()  
+station_pa_dataframe$Abundance[is.nan(station_pa_dataframe$Abundance)] <- 0
+station_pa_dataframe$Abundance_binary[(station_pa_dataframe$Abundance) == 0] <- "Absent"
+station_pa_dataframe$Abundance_binary[(station_pa_dataframe$Abundance) == 1] <- "Present"
+
+#by site
+station_pa_dataframe %>% 
+  group_by(Species) %>%
+  count(Abundance_binary) %>%
+  print(n = 25)
+
+
+station_pa <- phyloseq_standardize_otu_abundance(merge_samples(subset_samples(field_single, Basin == "Puget Sound"), group = "Site"), "pa")
+station_pa_dataframe <- station_pa  %>%
+  psmelt()  
+station_pa_dataframe$Abundance[is.nan(station_pa_dataframe$Abundance)] <- 0
+station_pa_dataframe$Abundance_binary[(station_pa_dataframe$Abundance) == 0] <- "Absent"
+station_pa_dataframe$Abundance_binary[(station_pa_dataframe$Abundance) == 1] <- "Present"
+
+#by site
+station_pa_dataframe %>% 
+  group_by(Species) %>%
+  count(Abundance_binary) %>%
+  print(n = 25)
+
+
+
+```
+
+#box plot of jaccard distances within basins
+```{r}
+#In that case, just do box plots of Aitchison distances within and between samples, I’d say. 
+#Jaccard distance and presence/absence in the box plot to demonstrate the differences among communities
+
+field_pa_present <- subset_samples(field_pa, sample_sums(field_pa) > 0)
+
+
+#betadisp statistical test for each
+field_jaccard <-
+   vegdist(t(otu_table(field_pa_present)), "jaccard")
+groups <- as.matrix(sample_data(field_pa_present)$Basin) # define the variable that separates groups
+basincoi.disp <- betadisper(field_jaccard, groups)# calculates the beta-dispersion for each group, when comparing 2 or more
+basincoi.disp.anova <- anova(basincoi.disp)  # tests if distances to centroids  are significantly different from each other
+basincoi.disp.anova
+chaotogetheranova <- basincoi.disp.anova$`Pr(>F)`
+
+ano.coi <- with(data.frame(groups), anosim(leray.dist.matrix.bray, groups))
+summary(ano.coi)
+plot(ano.coi)
+
+barcoi <- data.frame(group = basincoi.disp$group, distances = basincoi.disp$distances, depth_bin = sample_data(zoopsCOI)$depth_bin, Region = sample_data(zoopsCOI)$NewRegion)
+barcoiplot <- ggplot(data = barcoi, aes(x = depth_bin, y  = distances)) + 
+         geom_boxplot(aes(fill = depth_bin)) +
+  geom_pwc(aes(x = depth_bin, y  = distances),
+           method = "dunn.test",
+           label = "p.adj.signif", 
+           hide.ns = T, 
+           symnum.args = list(cutpoints = c(0, 0.001, 0.01, 0.05, 1), symbols = c("***", "**", "*", "ns")),
+           tip.length = 0.01,
+           bracket.nudge.y = 0.04,
+           vjust = 0.5)  + 
+ # ylim(0,0.22)+ 
+ # theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  theme(legend.position = "none")+ 
+  scale_fill_manual(values = depthcolors) + 
+  ggtitle("COI: Beta diversity") + 
+  xlab("Depth zone") + 
+  ylab("Beta diversity")+ 
+  scale_x_discrete(labels=c("0-200m" = "0 -\n200m", "200-500m" = "200 -\n500m",
+                              "500-1000m" = "500 - \n1000m")) 
+# 
+
+
+
+```
+
+
+```{r}
+field_pa_present_stations <- merge_samples(field_pa_present, "Site")
+sample_data(field_pa_present_stations)$Basin <- str_split_i(sample_names(field_pa_present_stations), "-", 1)
+dissimilarity_basins <- phyloseq_group_dissimilarity(field_pa_present_stations,
+  group = "Basin",
+  between_groups = TRUE,
+  method = "jaccard",
+  method_title = FALSE,
+  notch = FALSE,
+  justDF = TRUE)
+
+get_box_stats <- function(y, upper_limit = max(dissimilarity_basins$Dist) * 1.25) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+dissimilarity_basins <- dissimilarity_basins %>%
+  mutate(Group2 = case_when(
+      Group == "AI" ~ "Puget Sound",
+      Group == "HC" ~ "Hood Canal",
+      Group == "AI-HC" ~ "Puget Sound-Hood Canal"
+    ))
+
+ggplot(dissimilarity_basins, aes(x = Comparison, y = Dist, color = Comparison, group = Comparison, fill = Comparison)) + 
+  geom_boxplot(alpha = 0.4, width = 0.5) + 
+ # geom_dotplot(aes(x = Group, y = Dist, color = Comparison, group = Group), binaxis = "y",  stackdir = "center", dotsize = 0.05) +
+  geom_jitter(alpha = 0.3) +
+  xlab("Comparison") + 
+  ylab("Jaccard distance") + 
+    stat_summary(fun.data = get_box_stats, geom = "text", hjust = 0.5, vjust = 0.9, color = "black") +
+  scale_color_manual(values = c("#FF7256", "#009ACD", "#FFC125")) + 
+    scale_fill_manual(values = c("#FF7256", "#009ACD", "#FFC125"))
+
+
+
+
+```
+
+
+

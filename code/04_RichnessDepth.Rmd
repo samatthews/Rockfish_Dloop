@@ -1,0 +1,164 @@
+---
+title: "04_RichnessDepth"
+output: html_document
+date: "2025-02-12"
+---
+
+
+Plot # of ASVs and/or # of species against sampling distance from bottom
+
+```{r}
+
+load("/Users/stephaniematthews/Documents/Rockfish/Conservation_Letters/Data/Rockfish_phyloseq.RData")
+field_curated_MDL <- subset_taxa(field_curated_MDL, Species != "Sebastes (unknown rockfish)")
+sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Site %in% c("HC-8", "HC-9")] <- "AI"#move HC 8 and 9 to AI, since they're more similar to AI 
+sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Basin %in% c("AI")] <- "Puget Sound"
+sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Basin %in% c("HC")] <- "Hood Canal"
+
+nsamples(field_curated_MDL)
+table(sample_data(field_curated_MDL)$Instrument)
+
+sample_data(field_curated_MDL)$Observed_ASVs <- estimate_richness(field_curated_MDL, split= T, "Observed")$Observed
+sample_data(field_curated_MDL)$Observed_Species <- estimate_richness(tax_glom(field_curated_MDL, "Species"), split= T, "Observed")$Observed
+metadata_field_curated_MDL <- data.frame(sample_data(subset_samples(field_curated_MDL, Basin %in% c("Puget Sound", "Hood Canal"))))
+metadata_field_curated_MDL <- metadata_field_curated_MDL %>% select(where(~!all(is.na(.x))))
+
+metadata_field_curated_MDL$WaterColumnLoc <- "Subsurface"
+metadata_field_curated_MDL$WaterColumnLoc[metadata_field_curated_MDL$Depth_m == 0] <- "Surface"
+metadata_field_curated_MDL$WaterColumnLoc <- factor(metadata_field_curated_MDL$WaterColumnLoc, levels = c("Surface", "Subsurface"))
+
+p <- ggplot(metadata_field_curated_MDL) + 
+  geom_jitter(aes(x=Distance_from_bottom, y = Observed_ASVs, color = Instrument), width = 2, height = 0.2, alpha = 0.5, size = 3) + 
+#  facet_wrap(.~PCR2.all.samples, scales = "free_x") + 
+  xlab("Distance from bottom (m)") + 
+  ylab("Sebastes ASVs")+
+  ggtitle("") + 
+    scale_color_manual(values = c("#104E8B", "#9BCD9B", "#EEAEEE"), name = "Platform") + 
+  scale_y_continuous(breaks = c(0, 2, 4, 6, 8))
+p
+
+jpeg("~/Documents/Rockfish/Conservation_Letters/Figures/Fig4ASVs_vs_distancefrombottom.jpeg", width = 4, height = 3, units = "in", res = 300)
+p
+dev.off()
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Fig4ASVs_vs_distancefrombottom.pdf", height =3, width = 4)
+p 
+dev.off()
+
+p <-metadata_field_curated_MDL %>% 
+  arrange(Instrument) %>%
+ ggplot() + 
+  geom_jitter(aes(x=Distance_from_bottom, y = Observed_Species, color = Instrument, shape = WaterColumnLoc), width = 1, height = 0.15, alpha = 0.45, size = 2) + 
+#  facet_wrap(.~PCR2.all.samples, scales = "free_x") + 
+  xlab("Distance from seafloor (m)") + 
+  ylab("Sebastes species")+
+  ggtitle("") + 
+    scale_color_manual(values = c("#104E8B", "#9BCD9B", "#EEAEEE"), name = "Platform") + 
+  scale_y_continuous(breaks = c(0, 1, 2, 3, 4, 5, 6, 8)) + 
+  scale_shape_manual(values = c(17, 19), name = "Sampling\nlocation")
+p
+
+jpeg("~/Documents/Rockfish/Conservation_Letters/Figures/Fig4Species_vs_distancefrombottom.jpeg", width = 4, height = 3, units = "in", res = 300)
+p
+dev.off()
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Fig4Species_vs_distancefrombottom.pdf", height = 3, width = 4)
+p 
+dev.off()
+
+```
+
+#number of species detected by sampling platform
+```{r}
+instrument_pa <- phyloseq_standardize_otu_abundance(merge_samples(field_single, group = "Instrument"), "pa")
+instrument_pa_dataframe <- instrument_pa  %>%
+  psmelt()  
+instrument_pa_dataframe$Abundance[is.nan(instrument_pa_dataframe$Abundance)] <- 0
+instrument_pa_dataframe$Abundance_binary[(instrument_pa_dataframe$Abundance) == 0] <- "Absent"
+instrument_pa_dataframe$Abundance_binary[(instrument_pa_dataframe$Abundance) == 1] <- "Present"
+
+#by site
+instrument_pa_dataframe %>% 
+  group_by(Instrument) %>%
+  count(Abundance_binary) %>%
+  print(n = 25)
+
+```
+
+## run poisson
+```{r}
+
+metadata_field_curated_MDL %>% 
+  arrange(Instrument) %>%
+ ggplot() + 
+  geom_jitter(aes(x=Distance_from_bottom, y = Observed_Species, color = Instrument, shape = WaterColumnLoc), width = 1, height = 0.15, alpha = 0.45, size = 2) + 
+  stat_smooth(aes(x=Distance_from_bottom, y = Observed_Species), method = "glm")
+
+
+
+summary(m1 <- glm(Observed_Species ~ Distance_from_bottom, family="poisson", data=metadata_field_curated_MDL))
+
+library(sandwich)
+cov.m1 <- vcovHC(m1, type="HC0")
+std.err <- sqrt(diag(cov.m1))
+r.est <- cbind(Estimate= coef(m1), "Robust SE" = std.err,
+"Pr(>|z|)" = 2 * pnorm(abs(coef(m1)/std.err), lower.tail=FALSE),
+LL = coef(m1) - 1.96 * std.err,
+UL = coef(m1) + 1.96 * std.err)
+
+r.est
+
+with(m1, cbind(res.deviance = deviance, df = df.residual,
+  p = pchisq(deviance, df.residual, lower.tail=FALSE)))
+
+library(msm)
+#s <- deltamethod(list(~ exp(x1), ~ exp(x2), ~ exp(x3), ~ exp(x4)), 
+#                                                coef(m1), cov.m1)
+
+## exponentiate old estimates dropping the p values
+##rexp.est <- exp(r.est[, -3])
+## replace SEs with estimates for exponentiated coefficients
+#rexp.est[, "Robust SE"] <- s
+
+#rexp.est
+
+### 
+metadata_field_curated_MDL$predicted <- predict(m1, type="response")
+
+## order by program and then by math
+#p <- p[with(p, order(prog, math)), ]
+
+## create the plot
+ggplot(metadata_field_curated_MDL, aes(x = Distance_from_bottom, y = predicted)) +
+  geom_point(aes(y = Observed_Species), alpha=.5, position=position_jitter(h=.2)) +
+  geom_line(size = 1) +
+  labs(x = "Distance from seafloor (m)", y = "Sebastes species")
+
+p <- metadata_field_curated_MDL %>% 
+  arrange(Instrument) %>%
+ ggplot() + 
+  geom_jitter(aes(x=Distance_from_bottom, y = Observed_Species, color = Instrument, shape = WaterColumnLoc), width = 1, height = 0.15, alpha = 0.45, size = 2) + 
+  geom_line(aes(x = Distance_from_bottom, y = predicted), size = 1, color = "grey40") +
+  #  facet_wrap(.~PCR2.all.samples, scales = "free_x") + 
+  xlab("Distance from seafloor (m)") + 
+  ylab("Sebastes species")+
+   ggtitle("") + 
+    scale_color_manual(values = c("#104E8B", "#9BCD9B", "#EEAEEE"), name = "Platform") + 
+  scale_y_continuous(breaks = c(0, 1, 2, 3, 4, 5, 6, 8)) + 
+  scale_shape_manual(values = c(17, 19), name = "Sampling\nlocation")
+p 
+
+
+jpeg("~/Documents/Rockfish/Conservation_Letters/Figures/Fig4Species_vs_distancefrombottom_lm.jpeg", width = 4, height = 3, units = "in", res = 300)
+p
+dev.off()
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Fig4Species_vs_distancefrombottom_lm.pdf", height = 3, width = 4)
+p 
+dev.off()
+
+
+```
+
+
+

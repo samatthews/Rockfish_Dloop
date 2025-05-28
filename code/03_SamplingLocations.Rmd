@@ -1,0 +1,510 @@
+---
+title: "03_SamplingLocations"
+output: html_document
+date: "2025-02-12"
+---
+
+Plot T/S characterizations for sampling locations 
+Plot geographic locations on map
+
+```{r libraries}
+library(oce)
+library(ncdf4)
+library(tidyverse)
+library(ncdump)
+library(sf)
+library(marmap)
+library(ggrepel)
+library(tidyquant)
+library(ggdist)
+library(ggthemes)
+library(ggpubr)
+library(ggtext)
+set.seed(110011)
+theme_set(theme_bw())
+theme_update(plot.title = element_text(hjust = 0.5))
+```
+
+#plot on map
+
+##PLOT metabarcoding locations on map
+```{r}
+metadataBOAT <- read.delim("/Users/stephaniematthews/Documents/Rockfish/MiSeq_analysis/metadata_miseqs/MDL_2024-10-07_Rockfish3_metadata.csv", sep = ",")
+rownames(metadataBOAT) <- metadataBOAT$Sample_name
+#rownames(samples3) <- gsub("-", ".", rownames(samples3))
+metadataBOAT <- metadataBOAT[!duplicated(metadataBOAT[,c('Filter.ID')]),]
+
+metadataDIVE <- read.delim("/Users/stephaniematthews/Documents/Rockfish/MiSeq_analysis/metadata_miseqs/MDL_2024-07-19_Rockfish2_metadata.csv", sep = ",")
+rownames(metadataDIVE) <- metadataDIVE$Sample_name
+
+
+metadata <- rbind(metadataBOAT[,c("Site", "Sample_name", "Latitude", "Longitude", "Date", "Depth_category", "Basin")], metadataDIVE[,c("Site", "Sample_name", "Latitude", "Longitude", "Date", "Depth_category", "Basin")])
+metadata <- metadata[!is.na(metadata$Latitude),]
+metadata <- metadata[(metadata$Depth_category %in% c("Near bottom", "Surface")),]
+metadataCOUNTS <- metadata %>%
+    pivot_wider(id_cols = c("Latitude", "Longitude", "Basin", "Site"),
+                names_from = "Depth_category",
+                values_from = "Date",
+                values_fn = list(Date = length)) 
+metadataCOUNTS$AllSamples <- rowSums(metadataCOUNTS[,c("Near bottom", "Surface")])
+metadataCOUNTS_Boat <- metadataCOUNTS[metadataCOUNTS$`Near bottom` < 10,]
+metadataCOUNTS$Longitude <- metadataCOUNTS$Longitude * -1
+metadataCOUNTS_Boat$Longitude <- metadataCOUNTS_Boat$Longitude * -1
+
+write.csv(metadataCOUNTS, file = "~/Documents/Rockfish/Conservation_Letters/Data/SamplingLocationsUnique.csv")
+write.csv(metadata, file = "~/Documents/Rockfish/Conservation_Letters/Data/SamplingLocations_bysample.csv")
+
+metadataCOUNTS$Site[metadataCOUNTS$Site == "Possession"] <- "AI-6" 
+metadataCOUNTS$Site[metadataCOUNTS$Site == "Mulkiteo"] <- "AI-7" 
+
+metadataCOUNTS$Basin[metadataCOUNTS$Site %in% c("HC-8", "HC-9")] <- "AI"
+metadataCOUNTS$Site[metadataCOUNTS$Site == "HC-8"] <- "AI-3" 
+metadataCOUNTS$Site[metadataCOUNTS$Site == "HC-9"] <- "AI-4" 
+
+metadataCOUNTS$Site[metadataCOUNTS$Site == "AI-1"] <- "PS-1" 
+metadataCOUNTS$Site[metadataCOUNTS$Site == "AI-2"] <- "PS-2" 
+metadataCOUNTS$Site[metadataCOUNTS$Site == "AI-3"] <- "PS-3" 
+metadataCOUNTS$Site[metadataCOUNTS$Site == "AI-4"] <- "PS-4" 
+metadataCOUNTS$Site[metadataCOUNTS$Site == "AI-6"] <- "PS-6" 
+metadataCOUNTS$Site[metadataCOUNTS$Site == "AI-7"] <- "PS-7" 
+metadataCOUNTS$Site[metadataCOUNTS$Site == "AI-8"] <- "PS-8" 
+
+
+metadataCOUNTS$Basin[metadataCOUNTS$Basin == "AI"] <- "Puget Sound"
+metadataCOUNTS$Basin[metadataCOUNTS$Basin == "HC"] <- "Hood Canal"
+
+metadataCOUNTS$Platform <- "*In situ* & surface "
+metadataCOUNTS$Platform[metadataCOUNTS$Site %in% c("PS-6", "PS-7")] <- "Diver & surface "
+
+#based on greg's notes: 
+metadataCOUNTS$Latitude[metadataCOUNTS$Site == "PS-7"] <- 47.850304
+metadataCOUNTS$Longitude[metadataCOUNTS$Site == "PS-7"] <- -122.338231
+
+```
+
+
+```{r}
+SS <- getNOAA.bathy(-123.5, -122, 47, 48.5, resolution = .3, antimeridian = FALSE)
+SS_xyz <- as.xyz(SS)
+
+
+seattle_location <- tibble(landmark = c("Downtown Seattle", "University of Washington"),
+                           latitude = c(47.609153, 47.656652),
+                           longitude = c(-122.341500, -122.305974))
+
+
+p <- ggplot(data=metadataCOUNTS, aes(x = Longitude, y = Latitude)) + 
+  geom_tile(data = SS_xyz, aes(x = V1, y = V2, fill = V3), inherit.aes = F) +
+    scale_fill_gradient2(low="#0D0D47", mid="gainsboro", high="darkgreen",guide="none") +
+  geom_contour(data = SS_xyz, 
+               aes(x = V1, y = V2, z = V3),
+               breaks = c(0), color = "grey5", linewidth = 0.3, inherit.aes = F) +
+  geom_contour(data = SS_xyz, 
+               aes(x = V1, y = V2, z = V3),
+               binwidth = 100, color = "grey65", linewidth = 0.1, inherit.aes = F) +
+  coord_sf(xlim = c(-123.5, -122), 
+           ylim = c(47, 48.5)) +
+  labs(x = "Longitude", y = "Latitude", fill = "Topography/\nBathymetry (m)", color = "Sampling platforms", shape = "Sampling platforms") +
+  theme_minimal() + 
+  geom_point(data=metadataCOUNTS, aes(x = Longitude, y = Latitude, shape = Platform), size = 2) + 
+  geom_label_repel(data=metadataCOUNTS, aes(label= Site, x = Longitude, y = Latitude), point.padding = 0.25, alpha = 0.8, min.segment.length = 0, size = 3, label.padding = 0.1, box.padding = 0.1) +
+  geom_point(data=seattle_location[seattle_location$landmark == "Downtown Seattle",], aes(x = longitude, y = latitude), shape = 1, size = 5, color = "black") + 
+  geom_label_repel(data=seattle_location[seattle_location$landmark == "Downtown Seattle",], aes(label = landmark, x = longitude, y = latitude), point.padding = 5, alpha = 1, min.segment.length = 0, size = 3, label.padding = 0.2, box.padding = 0.2) +
+  guides(
+    shape = guide_legend(position = "inside"),
+  ) + 
+  theme(legend.position.inside = c(0.24, 0.82),
+        legend.background = element_rect(fill="grey99", 
+                                  linewidth=0.2, linetype="solid"),
+        legend.text=element_markdown(size=rel(0.7)),
+        legend.title=element_text(size = rel(0.7)),
+        legend.margin=margin(c(3,3,3,3))) + #top, right, bottom, left
+  theme(legend.text = element_markdown())
+
+  p
+
+
+jpeg("~/Documents/Rockfish/Conservation_Letters/Figures/Fig3map.jpeg", width = 4, height = 4, units = "in", res = 300)
+p
+dev.off()
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/Fig3map.pdf", height = 4, width = 4)
+p 
+dev.off()
+
+  
+
+
+
+
+
+```
+
+
+#get locations
+```{r}
+sites <- read.csv("~/Documents/Rockfish/Conservation_Letters/Data/LiveOceanData/SamplingLocationsUnique.csv")
+sites_new <- read.csv("~/Documents/Rockfish/Conservation_Letters/Data/SamplingLocationsUnique.csv")
+sites_new$Site[sites_new$Site == "Possession"] <- "AI-6" 
+sites_new$Site[sites_new$Site == "Mulkiteo"] <- "AI-7" 
+sites_new$Site[sites_new$Site == "HC-8"] <- "AI-3" 
+sites_new$Site[sites_new$Site == "HC-9"] <- "AI-4" 
+
+```
+
+#load liveocean data
+```{r}
+#dump to see structure:
+ncin <- nc_open("~/Documents/Rockfish/Conservation_Letters/Data/LiveOceanData/Steph/1_2024.01.01_2024.12.31.nc")
+head(print(ncin))
+attributes(ncin$var)
+
+setwd("~/Documents/Rockfish/Conservation_Letters/Data/LiveOceanData/Steph/")
+FilesList<-dir(pattern="\\.nc$")
+
+for(i in 1:length(FilesList)){
+  nc_fname <- FilesList[i]
+
+  nc_ds <- nc_open(nc_fname)
+  salt <- ncvar_get(nc_ds, "salt")
+  temp <- ncvar_get(nc_ds, "temp")
+  oxy <- ncvar_get(nc_ds, "oxygen")
+  lat <- ncvar_get(nc_ds, "lat_rho")
+  lon <- ncvar_get(nc_ds, "lon_rho")
+
+  time <- ncvar_get(nc_ds, "ocean_time")
+  t_units <- ncatt_get(nc_ds, "ocean_time", "units")
+  time_obs <- as.POSIXct(time, origin = "1970-01-01", tz="GMT")
+  
+  station <- gsub('_.*', '', FilesList[i])
+
+  nc_df <- data.frame(cbind(salt[30,], temp[30,], oxy[30,], salt[1,], temp[1,], oxy[1,], time_obs, station, lat, lon))
+  names(nc_df) <- c("salt_surf", "temp_surf", "oxy_surf", "salt_bottom", "temp_bottom", "oxy_bottom", "time", "station", "lat", "lon")
+  csv_fname <- "netcdf_filename.csv"  ## I am not sure you need this line, it doesn't get called again
+  write.csv(nc_df, paste0(gsub("\\.nc$","",FilesList[i]), "_twodepths", ".csv"))
+}
+
+```
+
+#reformat liveocean data 
+```{r}
+csvlist<-dir(pattern="*twodepths.csv")
+
+years_data <- lapply(csvlist, read_csv) %>% dplyr::bind_rows()
+years_data$time_gmt <- as.POSIXct(years_data$time, origin = "1970-01-01", tz="GMT") 
+
+years_data_long <- years_data %>% pivot_longer(cols = salt_surf:oxy_bottom)
+#years_data_long$site_name <- match(years_data_long$station, sites_new[c("X", "Site"),])
+years_data_long <- dplyr::left_join(years_data_long, sites_new, by = join_by(station == X))
+
+rho_stations <- years_data_long %>% distinct(station, .keep_all=T)
+
+years_data_long <- years_data_long %>% 
+  separate(col = name, c("param", "depth")) %>%
+  mutate(station_depth = paste(Site, depth)) %>%
+  mutate(day_of_year = date(time_gmt)) %>%
+  mutate(month_of_year = month(time_gmt))
+
+daily_data <- years_data_long %>%
+  group_by(depth, param, day_of_year, Site) %>%
+  mutate(dailymean = mean(value)) %>%
+  distinct(depth, param, day_of_year, .keep_all=TRUE)
+
+
+```
+
+```{r}
+ggplot(years_data_long, aes(x = time_gmt, y = value, group = depth, color = depth)) + 
+  geom_line() + 
+  facet_grid(param~Site, scales = "free_y")
+
+ggplot(daily_data, aes(x = day_of_year, y = value, group = Site, color = Site)) + 
+  geom_line() + 
+  facet_wrap(depth~param, scales = "free") + 
+  xlab("Date") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + 
+  scale_color_manual(values = c("#CD3333", "#EE7621", "#EEC900", "#458B00", "#0000CD", "#9A32CD", "#FFB5C5", "#FFA07A", "#FFF68F", "#B4EEB4", "#8EE5EE", "#EEAEEE"))
+```
+
+```{r}
+mean_data <- years_data_long %>% 
+  group_by(depth, param, Site) %>%
+  mutate(mean_obs = mean(value)) %>%
+  distinct(depth, param, Site, mean_obs, Latitude, Longitude, Basin)
+
+mean_monthly <- years_data_long %>% 
+  group_by(depth, param, Site, month_of_year) %>%
+  mutate(mean_obs = mean(value)) %>%
+  distinct(depth, param, Site, mean_obs, Latitude, Longitude, Basin, month_of_year)
+
+tempsal <- mean_data %>%
+  pivot_wider(names_from = param, values_from = mean_obs)
+
+tempsalmonthly <- mean_monthly %>%
+  pivot_wider(names_from = param, values_from = mean_obs)
+
+dailydata_tempsal <- years_data_long %>% 
+  ungroup() %>%
+  #select(temp, salt, oxy, lat, lon, Basin, Site, param, value) %>%
+  pivot_wider(names_from = param, values_from = value) %>%
+  select(temp, salt, oxy, lat, lon, Basin, Site) %>%
+ # drop_na() %>%
+  as.data.frame()
+
+```
+
+
+```{r}
+library(PlotSvalbard)
+
+tempsal$Depth <- NA
+tempsal$Depth[tempsal$depth == "bottom"] <- "Bottom" 
+tempsal$Depth[tempsal$depth == "surf"] <- "Surface" 
+tempsal$Depth <- as.factor(tempsal$Depth, levels = c("Surface", "Bottom"))
+tempsal <- tempsal %>% 
+  mutate(Depth=fct_relevel(Depth,c("Surface", "Bottom")))
+
+ts_plot(tempsal, temp_col = "temp", sal_col = "salt", color = "oxy", symbol_alpha = 1, symbol_size = 2, symbol_shape = 16) + facet_grid(Depth~Basin) +
+  geom_text_repel(data = tempsal, aes(x = salt, y = temp, label = Site), fontface = 2, size = 25.4/72.27*8) +
+  scale_y_continuous(expression(paste("Temperature (", degree, "C", ")", sep = "")))
+
+ts_plot(tempsalmonthly, temp_col = "temp", sal_col = "salt", color = "Site", symbol_alpha = 1, symbol_size = 2, symbol_shape = 16) + 
+  scale_color_manual(values = c("#CD3333", "#0000CD", "#006400", "#7A378B", "#FF7F00", "#FFD700", "#FF69B4", "#1E90FF", "#A2CD5A", "#AB82FF", "#FFD39B", "#FFF68F"))
+
+
+ts_plot(dailydata_tempsal, temp_col = "temp", sal_col = "salt", color = "Site", symbol_alpha = 1, symbol_size = 2, symbol_shape = 16)
+
+```
+
+
+##plot raincloud (near bottom)
+```{r}
+p_temp <- years_data_long %>% 
+  filter(param %in% c("temp")) %>% 
+  filter(depth %in% c("bottom")) %>% 
+  ggplot(aes(x = factor(Site), y = value, fill = Site)) +
+  
+  # add half-violin from {ggdist} package
+  stat_halfeye(
+    # adjust bandwidth
+    adjust = 0.5,
+    # move to the right
+    justification = -0.2,
+    # remove the slub interval
+    .width = 0,
+    point_colour = NA, 
+    normalize = "groups",
+    scale = 0.6
+  ) +
+  geom_boxplot(
+    width = 0.12,
+    # removing outliers
+    outlier.color = NA,
+    alpha = 0.5
+  ) + 
+  xlab("Site") + 
+  ylab ("Temperature (C)") + 
+ # ggtitle("1 year of LiveOcean data, near-bottom")+ 
+  scale_fill_manual(values = c("#CD3333", "#0000CD", "#006400", "#7A378B", "#FF7F00", "#FFD700", "#A2CD5A", "#AB82FF", "#FFD39B", "#FFF68F", "#FF69B4", "#1E90FF")) + 
+  theme_bw(base_size = 8) + 
+  theme(legend.text = element_text(size = 6), 
+                                  legend.title = element_text(size = 6), 
+                                  legend.key.size = unit(.3, 'cm'))
+
+
+p_sal <- years_data_long %>% 
+  filter(param %in% c("salt")) %>% 
+  filter(depth %in% c("bottom")) %>% 
+  ggplot(aes(x = factor(Site), y = value, fill = (Site))) +
+  # add half-violin from {ggdist} package
+  stat_halfeye(
+    # adjust bandwidth
+    adjust = 0.5,
+    # move to the right
+    justification = -0.2,
+    # remove the slub interval
+    .width = 0,
+    point_colour = NA, 
+    normalize = "groups",
+    scale = 0.6
+  ) +
+  geom_boxplot(
+    width = 0.12,
+    # removing outliers
+    outlier.color = NA,
+    alpha = 0.5
+  ) + 
+  xlab("Site") + 
+  ylab ("Salinity (PSU)") + 
+#  ggtitle("1 year of LiveOcean data, near-bottom")+ 
+  scale_fill_manual(values = c("#CD3333", "#0000CD", "#006400", "#7A378B", "#FF7F00", "#FFD700", "#A2CD5A", "#AB82FF", "#FFD39B", "#FFF68F", "#FF69B4", "#1E90FF"))+ 
+  theme_bw(base_size = 8)
+
+p_oxy <- years_data_long %>% 
+  filter(param %in% c("oxy")) %>% 
+  filter(depth %in% c("bottom")) %>% 
+  ggplot(aes(x = factor(Site), y = value, fill = (Site))) +
+  
+  # add half-violin from {ggdist} package
+  stat_halfeye(
+    # adjust bandwidth
+    adjust = 0.5,
+    # move to the right
+    justification = -0.2,
+    # remove the slub interval
+    .width = 0,
+    point_colour = NA, 
+    normalize = "groups",
+    scale = 0.6
+  ) +
+  geom_boxplot(
+    width = 0.12,
+    # removing outliers
+    outlier.color = NA,
+    alpha = 0.5
+  ) + 
+  xlab("Site") + 
+  ylab ("Oxygen (mg/L)") + 
+#  ggtitle("1 year of LiveOcean data, near-bottom")+ 
+  scale_fill_manual(values = c("#CD3333", "#0000CD", "#006400", "#7A378B", "#FF7F00", "#FFD700", "#A2CD5A", "#AB82FF", "#FFD39B", "#FFF68F", "#FF69B4", "#1E90FF"))+ 
+  theme_bw(base_size = 8)
+
+p <- ggarrange(p_temp + scale_x_discrete(limits=(c("AI-1", "AI-2", "AI-3", "AI-4", "AI-6", "AI-7", "AI-8", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")), labels = c("PS-1", "PS-2", "PS-3", "PS-4", "PS-6", "PS-7", "PS-8", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5)), 
+          p_sal + scale_x_discrete(limits=(c("AI-1", "AI-2", "AI-3", "AI-4", "AI-6", "AI-7", "AI-8", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")), labels = c("PS-1", "PS-2", "PS-3", "PS-4", "PS-6", "PS-7", "PS-8", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5)), 
+          p_oxy + scale_x_discrete(limits=(c("AI-1", "AI-2", "AI-3", "AI-4", "AI-6", "AI-7", "AI-8", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")), labels = c("PS-1", "PS-2", "PS-3", "PS-4", "PS-6", "PS-7", "PS-8", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5)), 
+          ncol = 3, 
+          legend = "none")
+p
+#annotate_figure(p, top = text_grob("Near bottom, 1 year", 
+#               color = "black",  size = 10))
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/FigureS1_raincloud_nearbottom_wide.pdf", height =3, width = 6.5)
+#annotate_figure(p, top = text_grob("Near bottom, 1 year", 
+#               color = "black",  size = 10))
+p
+dev.off()
+
+jpeg(file = "~/Documents/Rockfish/Conservation_Letters/Figures/FigureS1_raincloud_nearbottom_wide.jpeg", height =3, width = 6.5, unit = "in", quality = 100, res = 300)
+#annotate_figure(p, top = text_grob("Near bottom, 1 year", 
+#               color = "black",  size = 10))
+p
+dev.off()
+
+```
+
+
+##plot raincloud (surface)
+```{r}
+p_temp <- years_data_long %>% 
+  filter(param %in% c("temp")) %>% 
+  filter(depth %in% c("surf")) %>% 
+  ggplot(aes(x = factor(Site), y = value, fill = Site)) +
+  
+  # add half-violin from {ggdist} package
+  stat_halfeye(
+    # adjust bandwidth
+    adjust = 0.5,
+    # move to the right
+    justification = -0.2,
+    # remove the slub interval
+    .width = 0,
+    point_colour = NA, 
+    normalize = "groups",
+    scale = 0.6
+  ) +
+  geom_boxplot(
+    width = 0.12,
+    # removing outliers
+    outlier.color = NA,
+    alpha = 0.5
+  ) + 
+  xlab("Site") + 
+  ylab ("Temperature (C)") + 
+ # ggtitle("1 year of LiveOcean data, near-bottom")+ 
+  scale_fill_manual(values = c("#CD3333", "#0000CD", "#006400", "#7A378B", "#FF7F00", "#FFD700", "#A2CD5A", "#AB82FF", "#FFD39B", "#FFF68F", "#FF69B4", "#1E90FF")) + 
+  theme_bw(base_size = 8) + 
+  theme(legend.text = element_text(size = 6), 
+                                  legend.title = element_text(size = 6), 
+                                  legend.key.size = unit(.3, 'cm'))
+
+
+p_sal <- years_data_long %>% 
+  filter(param %in% c("salt")) %>% 
+  filter(depth %in% c("surf")) %>% 
+  ggplot(aes(x = factor(Site), y = value, fill = (Site))) +
+  # add half-violin from {ggdist} package
+  stat_halfeye(
+    # adjust bandwidth
+    adjust = 0.5,
+    # move to the right
+    justification = -0.2,
+    # remove the slub interval
+    .width = 0,
+    point_colour = NA, 
+    normalize = "groups",
+    scale = 0.6
+  ) +
+  geom_boxplot(
+    width = 0.12,
+    # removing outliers
+    outlier.color = NA,
+    alpha = 0.5
+  ) + 
+  xlab("Site") + 
+  ylab ("Salinity (PSU)") + 
+#  ggtitle("1 year of LiveOcean data, near-bottom")+ 
+  scale_fill_manual(values = c("#CD3333", "#0000CD", "#006400", "#7A378B", "#FF7F00", "#FFD700", "#A2CD5A", "#AB82FF", "#FFD39B", "#FFF68F", "#FF69B4", "#1E90FF"))+ 
+  theme_bw(base_size = 8)
+
+p_oxy <- years_data_long %>% 
+  filter(param %in% c("oxy")) %>% 
+  filter(depth %in% c("surf")) %>% 
+  ggplot(aes(x = factor(Site), y = value, fill = (Site))) +
+  
+  # add half-violin from {ggdist} package
+  stat_halfeye(
+    # adjust bandwidth
+    adjust = 0.5,
+    # move to the right
+    justification = -0.2,
+    # remove the slub interval
+    .width = 0,
+    point_colour = NA, 
+    normalize = "groups",
+    scale = 0.6
+  ) +
+  geom_boxplot(
+    width = 0.12,
+    # removing outliers
+    outlier.color = NA,
+    alpha = 0.5
+  ) + 
+  xlab("Site") + 
+  ylab ("Oxygen (mg/L)") + 
+#  ggtitle("1 year of LiveOcean data, near-bottom")+ 
+  scale_fill_manual(values = c("#CD3333", "#0000CD", "#006400", "#7A378B", "#FF7F00", "#FFD700", "#A2CD5A", "#AB82FF", "#FFD39B", "#FFF68F", "#FF69B4", "#1E90FF"))+ 
+  theme_bw(base_size = 8)
+
+p <- ggarrange(p_temp + scale_x_discrete(limits=(c("AI-1", "AI-2", "AI-3", "AI-4", "AI-8", "HC-8", "HC-9", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")), labels = c("PS-1", "PS-2", "PS-3", "PS-4", "PS-8", "HC-8", "HC-9", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5)), 
+          p_sal + scale_x_discrete(limits=(c("AI-1", "AI-2", "AI-3", "AI-4", "AI-8", "HC-8", "HC-9", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")), labels = c("PS-1", "PS-2", "PS-3", "PS-4", "PS-8", "HC-8", "HC-9", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5)), 
+          p_oxy + scale_x_discrete(limits=(c("AI-1", "AI-2", "AI-3", "AI-4", "AI-8", "HC-8", "HC-9", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")), labels = c("PS-1", "PS-2", "PS-3", "PS-4", "PS-8", "HC-8", "HC-9", "HC-0", "HC-1", "HC-4", "HC-5", "HC-6")) + theme(axis.text.x = element_text(angle = 45, vjust = 0.5)), 
+          ncol = 3, 
+          legend = "none")
+p
+annotate_figure(p, top = text_grob("Surface, 1 year", 
+               color = "black",  size = 10))
+
+pdf(file = "~/Documents/Rockfish/Conservation_Letters/Figures/FigureS1_raincloud_surface_wide.pdf", height =3, width = 6.5)
+annotate_figure(p, top = text_grob("Surface, 1 year", 
+               color = "black",  size = 10))
+
+dev.off()
+
+jpeg(file = "~/Documents/Rockfish/Conservation_Letters/Figures/FigureS1_raincloud_surface.jpeg", height =3, width = 6.5, unit = "in", quality = 100, res = 300)
+annotate_figure(p, top = text_grob("Surface, 1 year", 
+               color = "black",  size = 10))
+
+dev.off()
+```
+
+

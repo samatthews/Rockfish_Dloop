@@ -1,0 +1,313 @@
+---
+title: "01_Import_to_Phyloseq"
+output: html_document
+date: "2025-02-10"
+---
+---
+title: "Rock3_lulu_2024-12-03"
+output: html_document
+date: "2024-12-03"
+---
+```{r}
+library(lulu)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(metagMisc)
+library(phyloseq)
+set.seed(110011)
+theme_set(theme_bw())
+theme_update(plot.title = element_text(hjust = 0.5))
+```
+
+
+#load asv tables, reformat for phyloseq
+```{r run1}
+MiSeqReads_r1 <- read.csv("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-04-13/outputs/2024-04-13_MDL_ASV_table.csv")
+MiSeqReads_r1_wide <- MiSeqReads_r1 %>% pivot_wider(names_from = Sample_name, values_from = nReads, id_cols = Hash, values_fill = 0)
+
+MiSeqReads_r1_wide <- as.data.frame(MiSeqReads_r1_wide)
+rownames(MiSeqReads_r1_wide) <- MiSeqReads_r1_wide$Hash
+MiSeqReads_r1_wide_nohash <- MiSeqReads_r1_wide[,-1]
+MiSeqReads_r1_wide_nohash <- as.data.frame(lapply(MiSeqReads_r1_wide_nohash, as.numeric))
+rownames(MiSeqReads_r1_wide_nohash) <- MiSeqReads_r1_wide$Hash
+colnames(MiSeqReads_r1_wide_nohash) <- str_split_i(colnames(MiSeqReads_r1_wide_nohash), pattern = "_", 1)
+```
+
+```{r run2}
+MiSeqReads_r2 <- read.csv("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-07-19_Rockfish2/outputs/2024-07-19_Rockfish2_MDL_ASV_table.csv")
+MiSeqReads_r2_wide <- MiSeqReads_r2 %>% pivot_wider(names_from = Sample_name, values_from = nReads, id_cols = Hash, values_fill = 0)
+
+MiSeqReads_r2_wide <- as.data.frame(MiSeqReads_r2_wide)
+rownames(MiSeqReads_r2_wide) <- MiSeqReads_r2_wide$Hash
+MiSeqReads_r2_wide_nohash <- MiSeqReads_r2_wide[,-1]
+MiSeqReads_r2_wide_nohash <- as.data.frame(lapply(MiSeqReads_r2_wide_nohash, as.numeric))
+rownames(MiSeqReads_r2_wide_nohash) <- MiSeqReads_r2_wide$Hash
+```
+
+```{r run misfits}
+MiSeqReads_misfits <- read.csv("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-10-11_Misfits/outputs/2024-10-11_Misfits_MDL_ASV_table.csv")
+MiSeqReads_misfits_wide <- MiSeqReads_misfits %>% pivot_wider(names_from = Sample_name, values_from = nReads, id_cols = Hash, values_fill = 0)
+
+MiSeqReads_misfits_wide <- as.data.frame(MiSeqReads_misfits_wide)
+rownames(MiSeqReads_misfits_wide) <- MiSeqReads_misfits_wide$Hash
+MiSeqReads_misfits_wide_nohash <- MiSeqReads_misfits_wide[,-1]
+MiSeqReads_misfits_wide_nohash <- as.data.frame(lapply(MiSeqReads_misfits_wide_nohash, as.numeric))
+rownames(MiSeqReads_misfits_wide_nohash) <- MiSeqReads_misfits_wide$Hash
+colnames(MiSeqReads_misfits_wide_nohash) <- str_split_i(colnames(MiSeqReads_misfits_wide_nohash), pattern = "_", 1)
+
+```
+
+```{r run3}
+MiSeqReads_r3 <- read.csv("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-12-02_Rockfish3/outputs/2024-12-02_Rockfish3_MDL_ASV_table.csv")
+MiSeqReads_r3_wide <- MiSeqReads_r3 %>% pivot_wider(names_from = Sample_name, values_from = nReads, id_cols = Hash, values_fill = 0)
+
+MiSeqReads_r3_wide <- as.data.frame(MiSeqReads_r3_wide)
+rownames(MiSeqReads_r3_wide) <- MiSeqReads_r3_wide$Hash
+MiSeqReads_r3_wide_nohash <- MiSeqReads_r3_wide[,-1]
+MiSeqReads_r3_wide_nohash <- as.data.frame(lapply(MiSeqReads_r3_wide_nohash, as.numeric))
+rownames(MiSeqReads_r3_wide_nohash) <- MiSeqReads_r3_wide$Hash
+colnames(MiSeqReads_r3_wide_nohash) <- str_split_i(colnames(MiSeqReads_r3_wide_nohash), pattern = "_", 1)
+
+```
+
+
+#load metadata, reformat for phyloseq
+```{r run1}
+samples1 <- read.delim("/Users/stephaniematthews/Documents/Rockfish/MiSeq_analysis/metadata_miseqs/MDL_2024-04-20_MegsRun1_metadata.csv", sep = ",")
+rownames(samples1) <- paste0("MDL.", samples1$X)
+
+```
+
+```{r run2}
+samples2 <- read.delim("/Users/stephaniematthews/Documents/Rockfish/MiSeq_analysis/metadata_miseqs/MDL_2024-07-19_Rockfish2_metadata.csv", sep = ",")
+rownames(samples2) <- samples2$Sample_name
+rownames(samples2) <- gsub("-", ".", rownames(samples2))
+samples2$Type[samples2$Type == "helvomaculatus"] <- "helvomaculatus.tissue"
+samples2$Type[samples2$Type == "ruberrimus"] <- "ruberrimus.tissue"
+
+```
+
+```{r misfits}
+samplesmisfits <- read.delim("/Users/stephaniematthews/Documents/Rockfish/MiSeq_analysis/metadata_miseqs/MDL_2024-09-10_Misfits_metadata.csv", sep = ",")
+rownames(samplesmisfits) <- samplesmisfits$Sample_ID
+rownames(samplesmisfits) <- gsub("-", ".", rownames(samplesmisfits))
+```
+
+```{r run3}
+samples3 <- read.delim("/Users/stephaniematthews/Documents/Rockfish/MiSeq_analysis/metadata_miseqs/MDL_2024-10-07_Rockfish3_metadata.csv", sep = ",")
+rownames(samples3) <- samples3$Sample_name
+rownames(samples3) <- gsub("-", ".", rownames(samples3))
+
+```
+
+
+#load fastas, reformat for phyloseq
+```{r run1}
+bs1 <- Biostrings::readDNAStringSet("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-04-13/outputs/2024-04-13_MDL_hash_key.fasta")
+```
+
+```{r run2}
+bs2 <- Biostrings::readDNAStringSet("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-07-19_Rockfish2/outputs/2024-07-19_Rockfish2_MDL_hash_key.fasta")
+```
+
+```{r misfits}
+bsmisfits <- Biostrings::readDNAStringSet("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-10-11_Misfits/outputs/2024-10-11_Misfits_MDL_hash_key.fasta")
+```
+
+```{r run3}
+bs3 <- Biostrings::readDNAStringSet("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-12-02_Rockfish3/outputs/2024-12-02_Rockfish3_MDL_hash_key.fasta")
+```
+
+
+#convert for phyloseq, merge phyloseq pieces
+```{r}
+#asv table 1
+MiSeqReads_r1_wide_nohash_ps <- otu_table(MiSeqReads_r1_wide_nohash, taxa_are_rows = T)
+taxa_names(MiSeqReads_r1_wide_nohash_ps) <- rownames(MiSeqReads_r1_wide_nohash)
+
+#asv table 2
+MiSeqReads_r2_wide_nohash_ps <- otu_table(MiSeqReads_r2_wide_nohash, taxa_are_rows = T)
+taxa_names(MiSeqReads_r2_wide_nohash_ps) <- rownames(MiSeqReads_r2_wide_nohash)
+
+#asv table misfits
+MiSeqReads_misfits_wide_nohash_ps <- otu_table(MiSeqReads_misfits_wide_nohash, taxa_are_rows = T)
+taxa_names(MiSeqReads_misfits_wide_nohash_ps) <- rownames(MiSeqReads_misfits_wide_nohash)
+
+#asv table 3
+MiSeqReads_r3_wide_nohash_ps <- otu_table(MiSeqReads_r3_wide_nohash, taxa_are_rows = T)
+taxa_names(MiSeqReads_r3_wide_nohash_ps) <- rownames(MiSeqReads_r3_wide_nohash)
+
+#metadata 1
+MiSeq_metadata1_ps <- sample_data(samples1)
+
+#metadata 2
+MiSeq_metadata2_ps <- sample_data(samples2)
+
+#metadata misfits
+MiSeq_metadatamisfits_ps <- sample_data(samplesmisfits)
+
+#metadata 3
+MiSeq_metadata3_ps <- sample_data(samples3)
+
+
+#merge
+ps_r1 <- merge_phyloseq(MiSeqReads_r1_wide_nohash_ps, bs1, MiSeq_metadata1_ps)
+ps_r2 <- merge_phyloseq(MiSeqReads_r2_wide_nohash_ps, bs2, MiSeq_metadata2_ps)
+ps_misfits <- merge_phyloseq(MiSeqReads_misfits_wide_nohash_ps, bsmisfits, MiSeq_metadatamisfits_ps)
+ps_r3 <- merge_phyloseq(MiSeqReads_r3_wide_nohash_ps, bs3, MiSeq_metadata3_ps)
+
+ps_MDL <- merge_phyloseq(ps_r1, ps_r2, ps_misfits, ps_r3)
+
+ps_MDL %>%
+      refseq() %>%
+      Biostrings::writeXStringSet("~/Documents/Rockfish/lulu/fasta_by_run/merged_four.fasta", append=FALSE,
+                                  compress=FALSE, compression_level=NA, format="fasta")
+
+
+#ps_MDL <- subset_samples(ps_MDL, Site %in% c("Possession", "Mulkiteo", "HC-8", "HC-9", "HC-1", "AI-8", "AI-2", "HC-0", "HC-4", "AI-1", "HC-6", "HC-5"))
+
+```
+
+##On linux, blast all ASV sequences against each other
+makeblastdb -in merged_four.fasta -parse_seqids -dbtype nucl
+
+
+blastn -db merged_four.fasta -outfmt '6 qseqid sseqid pident' -out match_list_four.txt -qcov_hsp_perc 80
+-perc_identity 84 -query merged_four.fasta
+
+#run lulu
+```{r}
+
+
+##Make the combined ASV table because Tobias suggested it works best if you do it with all samples at once.
+  
+ASV_wide <- data.frame(otu_table(ps_MDL, taxa_sums(ps_MDL)))
+
+ASV_wide <- ASV_wide[rowSums(ASV_wide) > 0,]
+  
+##input blast matchlist to R
+matchlist <- read.table("/Users/stephaniematthews/Documents/Rockfish/lulu/fasta_by_run/match_list_four.txt", header=FALSE,as.is=TRUE, stringsAsFactors=FALSE)
+
+## run lulu
+curated_result <- lulu(ASV_wide, matchlist, minimum_ratio_type = "avg", minimum_ratio = 1, minimum_match = 84, minimum_relative_cooccurence = 0.95)
+curated_result$discarded_count
+curated_result$curated_count
+lulu_filtered_ASVs <- curated_result$curated_table
+good_taxa_fourdatasets <- rownames(lulu_filtered_ASVs)
+
+```
+
+## insect taxonomy 
+```{r}
+trained_classifier_20241011_tuna_outgroups_min70 <- readRDS("~/Documents/Rockfish/AnnotationDatabases_google_22April/steph_taxonomy_approaches/Dloop-Insect/trained_classifier_20241011_tuna_outgroups_min70.rds")
+
+stephsclassifier <- trained_classifier_20241011_tuna_outgroups_min70
+
+extendmax <- function(n){
+  a <- attributes(n)
+  attr(n, 'maxlength') <- a$maxlength+20
+  n
+}
+extendmin <- function(n){
+  a <- attributes(n)
+  attr(n, 'minlength') <- a$minlength-20
+  n
+}
+
+stephsclassifiermod <- dendrapply(stephsclassifier, extendmax)
+stephsclassifiermod <- dendrapply(stephsclassifiermod, extendmin)
+
+all_rockfish_4runs <- ape::read.dna("~/Documents/Rockfish/lulu/fasta_by_run/merged_four.fasta", format = "fasta")
+good_rockfish_4runs <- all_rockfish_4runs[names(all_rockfish_4runs) %in% good_taxa_fourdatasets]
+
+classified_steph2 <- insect::classify(good_rockfish_4runs, stephsclassifiermod, threshold = 0.7, metadata = TRUE, ping = 1, mincount = 1, decay = FALSE, species = 'all', offset = -40)
+write.csv(classified_steph2, file = "/Users/stephaniematthews/Documents/Rockfish/Conservation_Letters/Data/classified_4runs_mersseqs_insect_70threshold.csv")
+
+```
+
+##reformat insect taxonomy
+```{r}
+MiSeqTaxonomy <- read.csv("/Users/stephaniematthews/Documents/Rockfish/Conservation_Letters/Data/classified_4runs_mersseqs_insect_70threshold.csv")
+MiSeqTaxonomy_phyloseq <- MiSeqTaxonomy[c("kingdom", "phylum", "class", "order", "family", "genus", "species", "score", "NNtaxon", "representative")]
+
+colnames(MiSeqTaxonomy_phyloseq) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "score", "nntaxon", "representative")
+MiSeqTaxonomy_phyloseq <- as.data.frame(MiSeqTaxonomy_phyloseq)
+rownames(MiSeqTaxonomy_phyloseq) <- MiSeqTaxonomy$representative
+
+MiSeqTaxonomy_phyloseq$Phylum[(MiSeqTaxonomy_phyloseq$Phylum == "")] <- MiSeqTaxonomy_phyloseq$Kingdom[(MiSeqTaxonomy_phyloseq$Phylum == "")]
+MiSeqTaxonomy_phyloseq$Class[(MiSeqTaxonomy_phyloseq$Class == "")] <- MiSeqTaxonomy_phyloseq$Phylum[(MiSeqTaxonomy_phyloseq$Class == "")]
+MiSeqTaxonomy_phyloseq$Order[(MiSeqTaxonomy_phyloseq$Order == "")] <- MiSeqTaxonomy_phyloseq$Class[(MiSeqTaxonomy_phyloseq$Order == "")]
+MiSeqTaxonomy_phyloseq$Family[(MiSeqTaxonomy_phyloseq$Family == "")] <- MiSeqTaxonomy_phyloseq$Order[(MiSeqTaxonomy_phyloseq$Family == "")]
+MiSeqTaxonomy_phyloseq$Genus[(MiSeqTaxonomy_phyloseq$Genus == "")] <- MiSeqTaxonomy_phyloseq$Family[(MiSeqTaxonomy_phyloseq$Genus == "")]
+MiSeqTaxonomy_phyloseq$Species[(MiSeqTaxonomy_phyloseq$Species == "")] <- MiSeqTaxonomy_phyloseq$Genus[(MiSeqTaxonomy_phyloseq$Species == "")]
+MiSeqTaxonomy_phyloseq$Species[(MiSeqTaxonomy_phyloseq$Species == "Sebastes sinensis")] <- "Sebastes diploproa"
+
+commonnames <- read_excel("/Users/stephaniematthews/Documents/Rockfish/Sebastes_flock/20241030_names.xlsx", )
+MiSeqTaxonomy_phyloseq_insect <- dplyr::left_join(MiSeqTaxonomy_phyloseq, commonnames, by = join_by(Species == GenusSpecies)) %>% select(c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "G.speciesC", "score", "nntaxon", "representative"))
+MiSeqTaxonomy_phyloseq_insect$G.speciesC[is.na(MiSeqTaxonomy_phyloseq_insect$G.speciesC)] <- MiSeqTaxonomy_phyloseq_insect$Species[is.na(MiSeqTaxonomy_phyloseq_insect$G.speciesC)]
+colnames(MiSeqTaxonomy_phyloseq_insect) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Binomial", "Species", "score", "nntaxon", "representative")
+
+rownames(MiSeqTaxonomy_phyloseq_insect) <- MiSeqTaxonomy_phyloseq_insect$representative
+```
+
+
+#merge into final cleaned phyloseq
+```{r}
+#asv table
+curated_table <- otu_table(curated_result$curated_table, taxa_are_rows = T)
+taxa_names(curated_table) <- rownames(curated_result$curated_table)
+sample_names(curated_table) <- str_split_i(sample_names(curated_table), pattern = "_", 1)
+
+#tax table
+curated_taxonomy <- tax_table(as.matrix(MiSeqTaxonomy_phyloseq_insect))
+taxa_names(curated_taxonomy) <- rownames(curated_taxonomy)
+
+#fasta seqs
+curated_seqs <- Biostrings::readDNAStringSet("~/Documents/Rockfish/lulu/fasta_by_run/merged_four.fasta")
+
+#sample metadata
+curated_metadata <- sample_data(ps_MDL)
+sample_names(curated_metadata) <- str_split_i(sample_names(curated_metadata), pattern = "_", 1)
+
+#merge
+curated_MDL <- merge_phyloseq(curated_table, curated_taxonomy, curated_metadata, curated_seqs)
+
+sample_names(curated_MDL) <- gsub("MeredithDloop.", "", sample_names(curated_MDL))
+sample_names(curated_MDL) <- gsub("MDL", "", sample_names(curated_MDL))
+
+rownames(samples2) <- gsub("-", ".", rownames(samples2))
+
+curated_MDL_sebastes <- subset_taxa(curated_MDL, Genus == "Sebastes")
+sample_data(curated_MDL_sebastes)$Sebastesreads <- sample_sums(curated_MDL_sebastes)
+sample_data(curated_MDL_sebastes)$prop_sebastes <- sample_data(curated_MDL_sebastes)$Sebastesreads/sample_data(curated_MDL_sebastes)$readswithprimers
+
+
+
+sample_data(curated_MDL_sebastes)$Sample_name <- gsub("MeredithDloop.", "", sample_data(curated_MDL_sebastes)$Sample_name)
+sample_data(curated_MDL_sebastes)$Sample_name <- gsub("MDL", "", sample_data(curated_MDL_sebastes)$Sample_name)
+sample_data(curated_MDL_sebastes)$Sample_name <- str_split_i(sample_data(curated_MDL_sebastes)$Sample_name, pattern = "_", 1)
+curated_MDL_sebastes <- subset_samples(curated_MDL_sebastes, Sample_name != "24A")
+sample_data(curated_MDL_sebastes)$Observed <- estimate_richness(curated_MDL_sebastes, measures = "Observed")$Observed
+
+field_curated_MDL <- subset_samples(curated_MDL_sebastes, Basin %in% c("HC", "AI"))
+field_curated_MDL <- subset_samples(field_curated_MDL, is.na(Location))
+field_curated_MDL <- subset_samples(field_curated_MDL, Sample_name != "MeredithDloop-31A_S55")
+field_curated_MDL <- subset_taxa(field_curated_MDL, taxa_sums(field_curated_MDL) > 0)
+
+field_curated_MDL_abundant <- subset_samples(field_curated_MDL, sample_sums(field_curated_MDL) > 500)
+field_curated_MDL_abundant <- subset_taxa(field_curated_MDL_abundant, taxa_sums(field_curated_MDL_abundant) > 0)
+
+
+save(field_curated_MDL, file = "/Users/stephaniematthews/Documents/Rockfish/Conservation_Letters/Data/Rockfish_phyloseq.RData")
+
+field_curated_MDL %>%
+      refseq() %>%
+      Biostrings::writeXStringSet("/Users/stephaniematthews/Documents/Rockfish/Conservation_Letters/Data/Rockfish_phyloseq.fna", append=FALSE,
+                                  compress=FALSE, compression_level=NA, format="fasta")
+#rm(list = ls())
+load("/Users/stephaniematthews/Documents/Rockfish/Conservation_Letters/Data/Rockfish_phyloseq.RData")
+```
+
+
+

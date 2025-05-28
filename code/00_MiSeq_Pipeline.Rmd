@@ -1,0 +1,279 @@
+---
+title: "Rock3_MiSeq_Pipeline"
+output: html_document
+date: "2024-12-02"
+---
+
+```{r SETUP}
+suppressMessages(library(tidyverse))
+suppressMessages(library(dada2))
+suppressMessages(library(here))
+suppressMessages(library(digest))
+suppressMessages(library(seqinr))
+
+#dependencies are dada2, 
+#cutadapt,(installed as a conda env called cutadapt) and 
+#taxonkit  (installed in usr/local/bin/)
+
+
+#functions for blast and LCA
+source("/Users/stephaniematthews/Documents/Rockfish/AnnotationDatabases/code/CEG_BLAST_function.R")
+source("/Users/stephaniematthews/Documents/Rockfish/AnnotationDatabases/code/LCA_function.R")
+```
+
+
+```{r LOCATIONS}
+#note, remember a trailing "/" as the last character on the path here
+PARENT_LOCATION <- "/Users/stephaniematthews/Documents/Rockfish/Raw_MiSeq/Rockfish_3/"
+  if (strsplit(PARENT_LOCATION,"")[[1]][nchar(PARENT_LOCATION)] != "/"){PARENT_LOCATION = paste0(PARENT_LOCATION, "/")}
+RUN_NAME <- "2024-12-02_Rockfish3" #basename(PARENT_LOCATION) #"MURI312"#
+PRIMERNAME <- "MDL"
+
+CLEANUP <- TRUE #TRUE #logical; delete all intermediate files and just keep logs and final outputs?
+BLASTSCOPE <- "vertebrate" #"eukaryote" ##either "vertebrate" or "eukaryote" .  Default is 97% identity for vertebrate, 90% for eukaryote
+
+
+#then, ultimately, where do you want the small handful of relevant output files to live?
+PROCESSED_LOCATION <- "/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq"
+  system2("mkdir", shQuote(paste0(PROCESSED_LOCATION, "/", PRIMERNAME, "_", RUN_NAME))) #create folder for code, etc
+
+FASTQ_LOCATION <- paste0(PARENT_LOCATION, "Fastq") #folder within Parent Location
+CODE_LOCATION <- paste0(PARENT_LOCATION, "code_etc") #folder within Parent Location
+  system2("mkdir", shQuote(CODE_LOCATION)) #create folder for code, etc
+TRIMMED_LOCATION <- paste0(PARENT_LOCATION, "for_dada2") #folder within Parent Location
+FILTERED_LOCATION <- paste0(PARENT_LOCATION, "filtered") #folder within Parent Location
+OUTPUT_LOCATION <- paste0(PARENT_LOCATION, "outputs") #folder within Parent Location
+  system2("mkdir", args=shQuote(FILTERED_LOCATION)) #make folder for processed reads
+  system2("mkdir", args=shQuote(OUTPUT_LOCATION)) #make folder for pipeline outputs
+
+#check dependencies and get path for cutadapt
+# CUTADAPT="/Users/rpk/Library/Python/3.9/bin/cutadapt"
+#CUTADAPT="/usr/local/bin/cutadapt" 
+CUTADAPT="/Users/stephaniematthews/miniconda3/envs/minion2024/bin/cutadapt"
+TAXONKIT="/Users/stephaniematthews/miniconda3/bin/taxonkit"
+```
+
+
+
+```{r PRIMER DATA}
+#read in primer data
+primer.data <- read.csv("/Users/stephaniematthews/Documents/Rockfish/MiSeq_analysis/primer.data.csv")
+
+#set up relevant info for primer trimming
+PRIMERSEQ_F <- primer.data %>% filter(name == PRIMERNAME) %>% pull(seq_f)
+PRIMERSEQ_R <- primer.data %>% filter(name == PRIMERNAME) %>% pull(seq_r)
+PRIMERLENGTH_F <- primer.data %>% filter(name == PRIMERNAME) %>% pull(primer_length_f)
+PRIMERLENGTH_R <- primer.data %>% filter(name == PRIMERNAME) %>% pull(primer_length_r)
+MAX_AMPLICON_LENGTH <- primer.data %>% filter(name == PRIMERNAME) %>% pull(max_amplicon_length)
+MIN_AMPLICON_LENGTH <- primer.data %>% filter(name == PRIMERNAME) %>% pull(min_amplicon_length)
+OVERLAP <- primer.data %>% filter(name == PRIMERNAME) %>% pull(overlap)
+
+
+###COPY FILES TO SCRIPTS FOLDER and write primer-trimming script via make_primer_shell_script.R
+    write.csv(primer.data, paste0(CODE_LOCATION, "/primer.data.csv"))
+    system2("cp", args = c(shQuote(here("MiSeq_analysis/code/make_primer_shell_script.R")), shQuote(CODE_LOCATION))) 
+    source(paste0(CODE_LOCATION, "/make_primer_shell_script.R")) #source R code to create shell script with relevant paths, params, etc
+    system2("cp", args = c(shQuote(here("MiSeq_analysis/code/draft_pipeline_code.R")), shQuote(CODE_LOCATION))) #this file
+
+    if (BLASTSCOPE == "vertebrate"){
+      system2("cp", args = c(shQuote(here("MiSeq_analysis/code/MURIblast_vertebrate_template.sh")), shQuote(CODE_LOCATION))) #template shell script for blast  
+    }
+    if (BLASTSCOPE == "eukaryote"){
+      system2("cp", args = c(shQuote(here("MiSeq_analysis/code/MURIblast_eukaryote_template.sh")), shQuote(CODE_LOCATION))) #template shell script for blast  
+    }
+    
+```
+
+
+
+
+```{r TRIM AND FILTER}
+### RUN PRIMER-TRIMMING
+system2("sh", args = shQuote(paste0(CODE_LOCATION, "/trim_primers.sh")))
+#ecited trim_primers to not require primer name
+
+### RUN DADA2
+filelist <- system2("ls", args = shQuote(TRIMMED_LOCATION), stdout = TRUE)
+
+fnFs <- filelist[grep(pattern="_R1_001.fastq.gz", filelist)]
+fnRs <- filelist[grep(pattern="_R2_001.fastq.gz", filelist)]
+  
+# fnFs <- grep(primer.data$locus_shorthand[i], sort(list.files(fastq_location, pattern="_R1_001.fastq", full.names = TRUE)), value = TRUE)
+# fnRs <- grep(primer.data$locus_shorthand[i], sort(list.files(fastq_location, pattern="_R2_001.fastq", full.names = TRUE)), value = TRUE)
+sample.names1 <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
+sample.names2 <- sapply(strsplit(basename(fnFs), "_"), `[`, 2)
+sample.names <- paste(sample.names1, sample.names2, sep = "_")
+
+### Name filtered files in filtered/subdirectory ----------------------------------
+filtFs <- file.path(FILTERED_LOCATION, paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(FILTERED_LOCATION, paste0(sample.names, "_R_filt.fastq.gz"))
+names(filtFs) <- sample.names
+names(filtRs) <- sample.names
+fnFsabs <- file.path(TRIMMED_LOCATION, fnFs)
+fnRsabs <- file.path(TRIMMED_LOCATION, fnRs)
+
+### Filter out Empty Samples ----------------------------------
+# if we don't filter out empty samples, an error happens during finding qual trimming length
+setwd(TRIMMED_LOCATION)
+file.empty <- function(filenames) file.info(filenames)$size == 20
+empty_files <- file.empty(fnFsabs) | file.empty(fnRsabs)
+fnFsabs <- fnFsabs[!empty_files]
+fnRsabs <- fnRsabs[!empty_files]
+filtFs <- filtFs[!empty_files]
+filtRs <- filtRs[!empty_files]
+sample.names <- sample.names[!empty_files]
+
+out <- filterAndTrim(fwd=fnFsabs, filt=filtFs, rev=fnRsabs, filt.rev=filtRs, 
+                     trimRight = c(PRIMERLENGTH_R,PRIMERLENGTH_F),
+                     # truncLen = c(where_trim_all_Fs,where_trim_all_Rs),
+                     maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
+                     compress=TRUE, multithread=TRUE, matchIDs=TRUE)
+
+beepr::beep()
+
+```
+
+
+
+```{r DADA2 CORE}
+
+
+### Dereplicate ---------------------------------------------------------------
+exists <- file.exists(filtFs) & file.exists(filtRs)
+filtFs <- filtFs[exists]
+filtRs <- filtRs[exists]
+derepFs <- derepFastq(filtFs, verbose=TRUE)
+derepRs <- derepFastq(filtRs, verbose=TRUE)
+
+# Name the derep-class objects by the sample names
+sample.names <- sample.names[exists]
+names(derepFs) <- sample.names
+names(derepRs) <- sample.names
+
+### Learn Error Rates ---------------------------------------------------------------
+dadaFs.lrn <- dada(derepFs, err=NULL, selfConsist = TRUE, multithread=TRUE)
+errF <- dadaFs.lrn[[1]]$err_out
+dadaRs.lrn <- dada(derepRs, err=NULL, selfConsist = TRUE, multithread=TRUE)
+errR <- dadaRs.lrn[[1]]$err_out
+
+### Sample Inference ---------------------------------------------------------------
+dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
+dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
+
+### Merge Paired Reads ---------------------------------------------------------------
+mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, minOverlap = OVERLAP, verbose=TRUE)
+beepr::beep()
+
+ ### Construct sequence table ---------------------------------------------------------------
+seqtab <- makeSequenceTable(mergers)
+
+### Remove chimeras ---------------------------------------------------------------
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+freq.nochim <- sum(seqtab.nochim)/sum(seqtab)
+
+### Filter by Size ---------------------------------------------------------------
+indexes.to.keep <- which((nchar(colnames(seqtab.nochim)) <= 500) & ((nchar(colnames(seqtab.nochim))) >= 200))
+cleaned.seqtab.nochim <- seqtab.nochim[,indexes.to.keep]
+filteredout.seqtab.nochim <- seqtab.nochim[,!indexes.to.keep]
+write.csv(filteredout.seqtab.nochim,paste0(FASTQ_LOCATION,"/../logs/","filtered_out_asv.csv"))
+
+### Track reads through pipeline ---------------------------------------------------------------
+getN <- function(x) sum(getUniques(x))
+track <- cbind(out[exists,], sapply(dadaFs, getN), sapply(dadaRs, getN), sapply(mergers, getN), rowSums(seqtab.nochim),rowSums(cleaned.seqtab.nochim))
+colnames(track) <- c("input", "filtered", "denoisedF", "denoisedR", "merged", "nonchim","length_filter")
+rownames(track) <- sample.names
+head(track)
+write.csv(track,paste0(FASTQ_LOCATION,"/../logs/","tracking_reads.csv"))
+```
+
+
+```{r HASH KEY}
+### Create Hashing  ---------------------------------------------------------------
+
+
+
+# define output files
+conv_file <- paste0(OUTPUT_LOCATION,"/",paste0(RUN_NAME,"_",PRIMERNAME,"_hash_key.csv"))
+conv_file.fasta <- file.path(OUTPUT_LOCATION,paste0(RUN_NAME,"_",PRIMERNAME,"_hash_key.fasta"))
+ASV_file <-  file.path(OUTPUT_LOCATION,paste0(RUN_NAME,"_",PRIMERNAME,"_ASV_table.csv"))
+taxonomy_file <- file.path(OUTPUT_LOCATION,paste0(RUN_NAME,"_",PRIMERNAME,"_taxonomy_output.csv"))
+bootstrap_file <- file.path(OUTPUT_LOCATION,paste0(RUN_NAME,"_",PRIMERNAME,"_tax_bootstrap.csv"))
+
+# create ASV table and hash key 
+print(paste0("creating ASV table and hash key...", Sys.time()))
+seqtab.nochim.df <- as.data.frame(cleaned.seqtab.nochim)
+conv_table <- tibble( Hash = "", Sequence ="")
+Hashes <- map_chr (colnames(seqtab.nochim.df), ~ digest(.x, algo = "sha1", serialize = F, skip = "auto"))
+conv_table <- tibble (Hash = Hashes,
+                      Sequence = colnames(seqtab.nochim.df))
+
+
+write_csv(conv_table, conv_file) # write hash key into a csv
+write.fasta(sequences = as.list(conv_table$Sequence), # write hash key into a fasta
+            names     = as.list(conv_table$Hash),
+            file.out = conv_file.fasta)
+sample.df <- tibble::rownames_to_column(seqtab.nochim.df,"Sample_name")
+sample.df <- data.frame(append(sample.df,c(Label=PRIMERNAME), after = 1))
+current_asv <- bind_cols(sample.df %>%
+                           dplyr::select(Sample_name, Label),
+                         seqtab.nochim.df)
+current_asv <- current_asv %>%
+  pivot_longer(cols = c(- Sample_name, - Label),
+               names_to = "Sequence",
+               values_to = "nReads") %>%
+  filter(nReads > 0)
+current_asv <- merge(current_asv,conv_table, by="Sequence") %>%
+  select(-Sequence) %>%
+  relocate(Hash, .after=Label)
+
+write_csv(current_asv, ASV_file) # write asv table into a csv
+
+###Move files to processed folder
+system2("cp", args = c("-r", shQuote(paste0(PARENT_LOCATION, "code_etc")), shQuote(paste0(PROCESSED_LOCATION, "/", PRIMERNAME, "_", RUN_NAME))))
+system2("cp", args = c("-r", shQuote(paste0(PARENT_LOCATION, "outputs")), shQuote(paste0(PROCESSED_LOCATION, "/", PRIMERNAME, "_", RUN_NAME))))
+system2("cp", args = c("-r", shQuote(paste0(PARENT_LOCATION, "logs")), shQuote(paste0(PROCESSED_LOCATION, "/", PRIMERNAME, "_", RUN_NAME))))
+
+
+
+
+```
+
+
+## insect taxonomy 
+```{r}
+trained_classifier_20241011_tuna_outgroups_min70 <- readRDS("trained_classifier_20241011_tuna_outgroups_min70.rds")
+
+stephsclassifier <- trained_classifier_20241011_tuna_outgroups_min70
+
+extendmax <- function(n){
+  a <- attributes(n)
+  attr(n, 'maxlength') <- a$maxlength+10
+  n
+}
+extendmin <- function(n){
+  a <- attributes(n)
+  attr(n, 'minlength') <- a$minlength-70
+  n
+}
+
+stephsclassifiermod <- dendrapply(stephsclassifier, extendmax)
+stephsclassifiermod <- dendrapply(stephsclassifiermod, extendmin)
+
+run3_rockfish <- ape::read.dna("/Users/stephaniematthews/Documents/Rockfish/Processed_MiSeq/MDL_2024-12-02_Rockfish3/outputs/2024-12-02_Rockfish3_MDL_hash_key.fasta", format = "fasta")
+
+
+classified_run3_steph2 <- insect::classify(run3_rockfish, stephsclassifiermod, threshold = 0.7, metadata = TRUE, ping = 1, mincount = 1, decay = FALSE, species = 'all', offset = -20)
+write.csv(classified_run3_steph2, file = "/Users/stephaniematthews/Documents/Rockfish/MiSeq_analysis/classified_run3_mersseqs_insect_70threshold.csv")
+
+
+
+```
+
+
+
+```{r}
+
+```
+
+
+
