@@ -1,0 +1,99 @@
+﻿,ID,Sample_name,Instrument,Site,Basin,WaterSample,Date,DiveNum,Depth_ft,Depth_m,Depth_category_dive,Depth_category,Distance_from_bottom,depth.notes,Latitude,Longitude,IDLetter,Sample.no,SampleName,primer,dilution,dilcompexists,run1,Type,total_ng_pooled,pcr2_band,readswithprimers
+10A,10A,MeredithDloop-10A_S34,Dive,Possession,AI,10A,2024 04 03,1,82,27.33333333,Near bottom,Near bottom,0,,47.897005,122.392666,A,S34,10A,MDL,no,yes,no,field,20,N,345
+10A.dil,10A.dil,MeredithDloop-10A-dil_S92,Dive,Possession,AI,10A,2024 04 03,1,82,27.33333333,Near bottom,Near bottom,0,,47.897005,122.392666,A,S92,10A-dil,MDL,isdil ,yes,no,field,2.3784,Y,42343
+14A.dil,14A.dil,MeredithDloop-14A-dil_S98,Dive,Possession,AI,14A,2024 04 03,1,0,0,Surface,Surface,27,,47.897005,122.392666,A,S98,14A-dil,MDL,isdil ,no,no,field,7.9524,Y,219565
+15A,15A,MeredithDloop-15A_S36,Dive,Possession,AI,15A,2024 04 03,1,82,27.33333333,Near bottom,Near bottom,0,10 feet away,47.897005,122.392666,A,S36,15A,MDL,no,no,no,field,20,Y,39442
+16A,16A,MeredithDloop-16A_S37,Dive,Possession,AI,16A,2024 04 03,1,82,27.33333333,Near bottom,Near bottom,0,10 feet away,47.897005,122.392666,A,S37,16A,MDL,no,no,no,field,20,Y,131727
+1A.dil,1A.dil,MeredithDloop-1A-dil_S90,Dive,Possession,AI,1A,2024 04 03,1,60,20,Near bottom,Near bottom,7,,47.897005,122.392666,A,S90,1A-dil,MDL,isdil ,no,no,field,2.7264,Y,26981
+24A,24A,MeredithDloop-24A_S52,Dive,Possession,AI,24A,2024 04 03,1,0,0,Surface,Surface,27,,47.897005,122.392666,A,S52,24A,MDL,no,no,no,field,20,N,168
+25A.dil,25A.dil,MeredithDloop-25A-dil_S100,Dive,Possession,AI,25A,2024 04 03,1,0,0,Surface,Surface,27,,47.897005,122.392666,A,S100,25A-dil,MDL,isdil ,no,no,field,4.1868,Y,36077
+26A.dil,26A.dil,MeredithDloop-26A-dil_S101,Dive,Possession,AI,26A,2024 04 03,1,0,0,Surface,Surface,27,,47.897005,122.392666,A,S101,26A-dil,MDL,isdil ,no,no,field,4.512,Y,67263
+27A,27A,MeredithDloop-27A_S35,Dive,Possession,AI,27A,2024 04 03,1,82,27.33333333,Near bottom,Near bottom,0,,47.897005,122.392666,A,S35,27A,MDL,no,no,no,field,20,Y,34333
+2A,2A,MeredithDloop-2A_S31,Dive,Possession,AI,2A,2024 04 03,1,60,20,Near bottom,Near bottom,7,,47.897005,122.392666,A,S31,2A,MDL,no,yes,no,field,16.044,N,390
+2A.dil,2A.dil,MeredithDloop-2A-dil_S91,Dive,Possession,AI,2A,2024 04 03,1,60,20,Near bottom,Near bottom,7,,47.897005,122.392666,A,S91,2A-dil,MDL,isdil ,yes,no,field,1.4556,N,916
+4A,4A,MeredithDloop-4A_S33,Dive,Possession,AI,4A,2024 04 03,1,82,27.33333333,Near bottom,Near bottom,0,,47.897005,122.392666,A,S33,4A,MDL,no,no,yes,field,20,Y,72136
+5A,5A,MeredithDloop-5A_S29,Dive,Possession,AI,5A,2024 04 03,1,30,10,Midwater,Near bottom,17,,47.897005,122.392666,A,S29,5A,MDL,no,no,no,field,20,Y,15627
+6A,6A,MeredithDloop-6A_S28,Dive,Possession,AI,6A,2024 04 03,1,30,10,Midwater,Near bottom,17,,47.897005,122.392666,A,S28,6A,MDL,no,no,no,field,20,Y,80239
+7A,7A,MeredithDloop-7A_S38,Dive,Possession,AI,7A,2024 04 03,1,82,27.33333333,Near bottom,Near bottom,0,10 feet away,47.897005,122.392666,A,S38,7A,MDL,no,no,no,field,20,Y,456182
+8A,8A,MeredithDloop-8A_S32,Dive,Possession,AI,8A,2024 04 03,1,60,20,Near bottom,Near bottom,7,,47.897005,122.392666,A,S32,8A,MDL,no,no,no,field,20,Y,110201
+9A,9A,MeredithDloop-9A_S27,Dive,Possession,AI,9A,2024 04 03,1,30,10,Midwater,Near bottom,17,,47.897005,122.392666,A,S27,9A,MDL,no,no,no,field,10.0032,Y,36899
+11A.dil,11A.dil,MeredithDloop-11A-dil_S94,Dive,Possession,AI,11A,2024 04 03,2,20,6.666666667,Midwater,Near bottom,20,,47.897005,122.392666,A,S94,11A-dil,MDL,isdil ,no,no,field,0.8076,N,824
+12A,12A,MeredithDloop-12A_S43,Dive,Possession,AI,12A,2024 04 03,2,45,15,Midwater,Near bottom,12,,47.897005,122.392666,A,S43,12A,MDL,no,yes,no,field,20,N,2651
+12A.dil,12A.dil,MeredithDloop-12A-dil_S95,Dive,Possession,AI,12A,2024 04 03,2,45,15,Midwater,Near bottom,12,,47.897005,122.392666,A,S95,12A-dil,MDL,isdil ,yes,no,field,3.8772,N,7963
+17A,17A,MeredithDloop-17A_S47,Dive,Possession,AI,17A,2024 04 03,2,60,20,Near bottom,Near bottom,17,,47.897005,122.392666,A,S47,17A,MDL,no,no,no,field,20,Y,7363
+18A,18A,MeredithDloop-18A_S44,Dive,Possession,AI,18A,2024 04 03,2,45,15,Midwater,Near bottom,12,,47.897005,122.392666,A,S44,18A,MDL,no,no,no,field,20,N,512
+19A,19A,MeredithDloop-19A_S42,Dive,Possession,AI,19A,2024 04 03,2,45,15,Midwater,Near bottom,12,,47.897005,122.392666,A,S42,19A,MDL,no,no,no,field,20,Y,43671
+20A,20A,MeredithDloop-20A_S46,Dive,Possession,AI,20A,2024 04 03,2,60,20,Near bottom,Near bottom,7,,47.897005,122.392666,A,S46,20A,MDL,no,no,no,field,20,N,430
+21A,21A,MeredithDloop-21A_S49,Dive,Possession,AI,21A,2024 04 03,2,82,27.33333333,Near bottom,Near bottom,0,,47.897005,122.392666,A,S49,21A,MDL,no,no,no,field,8.9352,Y,1061265
+22A,22A,MeredithDloop-22A_S50,Dive,Possession,AI,22A,2024 04 03,2,82,27.33333333,Near bottom,Near bottom,0,,47.897005,122.392666,A,S50,22A,MDL,no,no,no,field,20,Y,170261
+28A,28A,MeredithDloop-28A_S48,Dive,Possession,AI,28A,2024 04 03,2,82,27.33333333,Near bottom,Near bottom,0,,47.897005,122.392666,A,S48,28A,MDL,no,no,no,field,20,Y,70610
+29A,29A,MeredithDloop-29A_S41,Dive,Possession,AI,29A,2024 04 03,2,20,6.666666667,Midwater,Near bottom,20,,47.897005,122.392666,A,S41,29A,MDL,no,no,yes,field,12.048,Y,27653
+30A,30A,MeredithDloop-30A_S45,Dive,Possession,AI,30A,2024 04 03,2,60,20,Near bottom,Near bottom,7,,47.897005,122.392666,A,S45,30A,MDL,no,no,no,field,20,Y,68592
+10M,10M,MeredithDloop-10M_S9,Dive,Mulkiteo,AI,10M,2024 03 18,m,60,20,Near bottom,Near bottom,10,,47.95050672,122.3129385,M,S9,10M,MDL,no,no,no,field,20,Y,340068
+11M,11M,MeredithDloop-11M_S6,Dive,Mulkiteo,AI,11M,2024 03 18,m,30,10,Midwater,Near bottom,10,,47.95050672,122.3129385,M,S6,11M,MDL,no,no,no,field,20,N,1958
+12M,12M,MeredithDloop-12M_S5,Dive,Mulkiteo,AI,12M,2024 03 18,m,30,10,Midwater,Near bottom,20,,47.95050672,122.3129385,M,S5,12M,MDL,no,yes,yes,field,20,N,2728
+12M.dil,12M.dil,MeredithDloop-12M-dil_S81,Dive,Mulkiteo,AI,12M,2024 03 18,m,30,10,Midwater,Near bottom,20,,47.95050672,122.3129385,M,S81,12M-dil,MDL,isdil ,yes,yes,field,1.18632,N,6350
+13M,13M,MeredithDloop-13M_S4,Dive,Mulkiteo,AI,13M,2024 03 18,m,30,10,Midwater,Near bottom,20,,47.95050672,122.3129385,M,S4,13M,MDL,no,yes,no,field,20,N,1467
+13M.dil,13M.dil,MeredithDloop-13M-dil_S80,Dive,Mulkiteo,AI,13M,2024 03 18,m,30,10,Midwater,Near bottom,20,,47.95050672,122.3129385,M,S80,13M-dil,MDL,isdil ,yes,no,field,4.9392,Y,27586
+15M,15M,MeredithDloop-15M_S10,Dive,Mulkiteo,AI,15M,2024 03 18,m,90,30,Near bottom,Near bottom,0,,47.95050672,122.3129385,M,S10,15M,MDL,no,no,no,field,16.512,Y,401147
+16M,16M,MeredithDloop-16M_S7,Dive,Mulkiteo,AI,16M,2024 03 18,m,60,20,Near bottom,Near bottom,0,,47.95050672,122.3129385,M,S7,16M,MDL,no,yes,no,field,15.324,Y,20748
+16M.dil,16M.dil,MeredithDloop-16M-dil_S83,Dive,Mulkiteo,AI,16M,2024 03 18,m,60,20,Near bottom,Near bottom,10,,47.95050672,122.3129385,M,S83,16M-dil,MDL,isdil ,yes,no,field,2.6844,Y,52770
+5M,5M,MeredithDloop-5M_S2,Dive,Mulkiteo,AI,5M,2024 03 18,m,0,0,Surface,Surface,30,,47.95050672,122.3129385,M,S2,5M,MDL,no,no,no,field,20,N,106
+6M,6M,MeredithDloop-6M_S12,Dive,Mulkiteo,AI,6M,2024 03 18,m,90,30,Near bottom,Near bottom,0,,47.95050672,122.3129385,M,S12,6M,MDL,no,no,no,field,20,Y,261991
+7M,7M,MeredithDloop-7M_S11,Dive,Mulkiteo,AI,7M,2024 03 18,m,90,30,Near bottom,Near bottom,0,,47.95050672,122.3129385,M,S11,7M,MDL,no,yes,no,field,12.012,N,54
+7M.dil,7M.dil,MeredithDloop-7M-dil_S84,Dive,Mulkiteo,AI,7M,2024 03 18,m,90,30,Near bottom,Near bottom,0,,47.95050672,122.3129385,M,S84,7M-dil,MDL,isdil ,yes,no,field,1.254,N,832
+8M,8M,MeredithDloop-8M_S1,Dive,Mulkiteo,AI,8M,2024 03 18,m,0,0,Surface,Surface,30,,47.95050672,122.3129385,M,S1,8M,MDL,no,yes,no,field,20,N,53
+8M.dil,8M.dil,MeredithDloop-8M-dil_S77,Dive,Mulkiteo,AI,8M,2024 03 18,m,0,0,Surface,Surface,30,,47.95050672,122.3129385,M,S77,8M-dil,MDL,isdil ,yes,no,field,2.5896,Y,35096
+9M,9M,MeredithDloop-9M_S8,Dive,Mulkiteo,AI,9M,2024 03 18,m,60,20,Near bottom,Near bottom,10,,47.95050672,122.3129385,M,S8,9M,MDL,no,no,no,field,6.2304,Y,3120
+10P,10P,MeredithDloop-10P_S22,Dive,Possession,AI,10P,2024 03 18,p,75,25,Near bottom,Near bottom,0,,47.897005,122.392666,P,S22,10P,MDL,no,no,no,field,20,Y,602981
+11P.dil,11P.dil,MeredithDloop-11P-dil_S87,Dive,Possession,AI,11P,2024 03 18,p,0,0,Surface,Surface,25,,47.897005,122.392666,P,S87,11P-dil,MDL,isdil ,no,no,field,1.476,N,3473
+12P,12P,MeredithDloop-12P_S20,Dive,Possession,AI,12P,2024 03 18,p,75,25,Near bottom,Near bottom,0,,47.897005,122.392666,P,S20,12P,MDL,no,no,yes,field,20,Y,620841
+13P.dil,13P.dil,MeredithDloop-13P-dil_S88,Dive,Possession,AI,13P,2024 03 18,p,0,0,Surface,Surface,25,,47.897005,122.392666,P,S88,13P-dil,MDL,isdil ,no,no,field,1.2864,N,56
+15P,15P,MeredithDloop-15P_S15,Dive,Possession,AI,15P,2024 03 18,p,30,10,Midwater,Near bottom,15,,47.897005,122.392666,P,S15,15P,MDL,no,yes,no,field,16.356,N,117
+15P.dil,15P.dil,MeredithDloop-15P-dil_S85,Dive,Possession,AI,15P,2024 03 18,p,30,10,Midwater,Near bottom,15,,47.897005,122.392666,P,S85,15P-dil,MDL,isdil ,yes,no,field,1.3572,N,224
+16P,16P,MeredithDloop-16P_S16,Dive,Possession,AI,16P,2024 03 18,p,30,10,Midwater,Near bottom,15,,47.897005,122.392666,P,S16,16P,MDL,no,no,no,field,20,Y,249021
+3P,3P,MeredithDloop-3P_S19,Dive,Possession,AI,3P,2024 03 18,p,65,21.66666667,Near bottom,Near bottom,3,,47.897005,122.392666,P,S19,3P,MDL,no,no,no,field,20,Y,545779
+6P,6P,MeredithDloop-6P_S21,Dive,Possession,AI,6P,2024 03 18,p,75,25,Near bottom,Near bottom,0,,47.897005,122.392666,P,S21,6P,MDL,no,no,no,field,20,Y,514289
+7P,7P,MeredithDloop-7P_S14,Dive,Possession,AI,7P,2024 03 18,p,30,10,Midwater,Near bottom,15,,47.897005,122.392666,P,S14,7P,MDL,no,no,no,field,20,Y,45293
+8P,8P,MeredithDloop-8P_S18,Dive,Possession,AI,8P,2024 03 18,p,65,21.66666667,Near bottom,Near bottom,3,,47.897005,122.392666,P,S18,8P,MDL,no,no,no,field,20,Y,374991
+9P,9P,MeredithDloop-9P_S17,Dive,Possession,AI,9P,2024 03 18,p,65,21.66666667,Near bottom,Near bottom,3,,47.897005,122.392666,P,S17,9P,MDL,no,no,no,field,20,Y,434341
+Porpoise.7P.dil,Porpoise.7P.dil,MeredithDloop-Porpoise-7P-dil_S89,Dive,Possession,AI,Porpoise.7P,2024 03 18,s,0,0,Surface,Surface,25,,47.897005,122.392666,,S89,Porpoise-7P-dil,MDL,isdil ,no,no,field,1.7352,Y,13940
+110224,110224,MeredithDloop-110224_S117,Tissue,SJI,,,,,NA,,,,,,,,,S117,110224,MDL,no,no,no,ruberrimus.tissue,20,Y,144728
+114070,114070,MeredithDloop-114070_S118,Tissue,Vancouver,,,,,NA,,,,,,,,,S118,114070,MDL,no,no,no,ruberrimus.tissue,20,Y,554631
+119874,119874,MeredithDloop-119874_S121,Tissue,,,,,,NA,,,,,,,,,S121,119874,MDL,no,no,no,helvomaculatus.tissue,20,Y,601623
+151065,151065,MeredithDloop-151065_S119,Tissue,Alaska,,,,,NA,,,,,,,,,S119,151065,MDL,no,no,no,ruberrimus.tissue,20,Y,311974
+151733,151733,MeredithDloop-151733_S120,Tissue,Oregon,,,,,NA,,,,,,,,,S120,151733,MDL,no,no,no,ruberrimus.tissue,20,Y,743242
+31A,31A,MeredithDloop-31A_S55,,,,,2024 04 03,,NA,,,,,,,,A,S55,31A,MDL,no,no,yes,dive,20,Y,41598
+AQ.1,AQ.1,MeredithDloop-AQ-1_S56,Aquarium,WOWW,,,,,NA,,,,,,,,,S56,AQ-1,MDL,no,no,no,aquarium,20,Y,1280362
+AQ.10,AQ.10,MeredithDloop-AQ-10_S65,Aquarium,intake,,,,,NA,,,,,,,,,S65,AQ-10,MDL,no,no,no,aquarium,20,Y,238089
+AQ.11,AQ.11,MeredithDloop-AQ-11_S66,Aquarium,intake,,,,,NA,,,,,,,,,S66,AQ-11,MDL,no,no,no,aquarium,20,Y,209798
+AQ.12,AQ.12,MeredithDloop-AQ-12_S67,Aquarium,intake,,,,,NA,,,,,,,,,S67,AQ-12,MDL,no,no,no,aquarium,20,Y,466780
+AQ.2,AQ.2,MeredithDloop-AQ-2_S57,Aquarium,WOWW,,,,,NA,,,,,,,,,S57,AQ-2,MDL,no,no,no,aquarium,20,Y,520579
+AQ.3,AQ.3,MeredithDloop-AQ-3_S58,Aquarium,WOWW,,,,,NA,,,,,,,,,S58,AQ-3,MDL,no,no,no,aquarium,20,Y,722757
+AQ.4,AQ.4,MeredithDloop-AQ-4_S59,Aquarium,EBW,,,,,NA,,,,,,,,,S59,AQ-4,MDL,no,no,no,aquarium,20,Y,540720
+AQ.5,AQ.5,MeredithDloop-AQ-5_S60,Aquarium,EBW,,,,,NA,,,,,,,,,S60,AQ-5,MDL,no,no,no,aquarium,20,Y,354454
+AQ.6,AQ.6,MeredithDloop-AQ-6_S61,Aquarium,EBW,,,,,NA,,,,,,,,,S61,AQ-6,MDL,no,no,no,aquarium,20,Y,357170
+AQ.7,AQ.7,MeredithDloop-AQ-7_S62,Aquarium,UD,,,,,NA,,,,,,,,,S62,AQ-7,MDL,no,no,no,aquarium,20,Y,397845
+AQ.8,AQ.8,MeredithDloop-AQ-8_S63,Tissue,UD,,,,,NA,,,,,,,,,S63,AQ-8,MDL,no,no,no,aquarium,20,Y,834245
+AQ.9,AQ.9,MeredithDloop-AQ-9_S64,Aquarium,UD,,,,,NA,,,,,,,,,S64,AQ-9,MDL,no,no,no,aquarium,20,Y,628437
+DECLKA,DECLKA,MeredithDloop-DECLKA_S69,Freezer,,,,,,NA,,,,,,,,,S69,DECLKA,MDL,no,no,no,SJILK,20,Y,533065
+P12.NB.202209,P12.NB.202209,MeredithDloop-P12-NB-202209_S75,Freezer,,,,,,120,40,,,,,,,,S75,P12-NB-202209,MDL,no,no,no,WOAC,20,Y,498918
+P12D.042021,P12D.042021,MeredithDloop-P12D-042021_S74,Freezer,,,,,,0,0,,,,,,,,S74,P12D-042021,MDL,no,no,no,WOAC,6.3552,Y,43042
+SJLK20170613C.dil,SJLK20170613C.dil,MeredithDloop-SJLK20170613C-dil_S102,Freezer,,,,,,0,0,,,,,,,,S102,SJLK20170613C-dil,MDL,isdil ,no,no,SJILK,5.0148,Y,92794
+SJLK20170724B,SJLK20170724B,MeredithDloop-SJLK20170724B_S70,Freezer,,,,,,0,0,,,,,,,,S70,SJLK20170724B,MDL,no,no,no,SJILK,6.9336,Y,138569
+SJLK20170724C,SJLK20170724C,MeredithDloop-SJLK20170724C_S71,Freezer,,,,,,0,0,,,,,,,,S71,SJLK20170724C,MDL,no,no,no,SJILK,7.8348,Y,44506
+SJLK20170921A,SJLK20170921A,MeredithDloop-SJLK20170921A_S72,Freezer,,,,,,0,0,,,,,,,,S72,SJLK20170921A,MDL,no,no,no,SJILK,4.1808,Y,28971
+SJLK20170921B,SJLK20170921B,MeredithDloop-SJLK20170921B_S73,Freezer,,,,,,0,0,,,,,,,,S73,SJLK20170921B,MDL,no,no,no,SJILK,16.632,Y,467692
+Undetermined,Undetermined,MeredithDloop-Undetermined_S0,,,,,,,NA,,,,,,,,,S0,Undetermined,MDL,no,no,no,undetermined,NA,,3185408
+YI.1003,YI.1003,MeredithDloop-YI-1003_S115,Tissue,inside,,,,,NA,,,,,,,,,S115,YI-1003,MDL,no,no,no,ruberrimus.tissue,20,Y,545805
+YI.1022,YI.1022,MeredithDloop-YI-1022_S116,Tissue,inside,,,,,NA,,,,,,,,,S116,YI-1022,MDL,no,no,no,ruberrimus.tissue,20,Y,616449
+YI.322,YI.322,MeredithDloop-YI-322_S105,Tissue,outside,,,,,NA,,,,,,,,,S105,YI-322,MDL,no,no,no,ruberrimus.tissue,20,Y,72360
+YI.339,YI.339,MeredithDloop-YI-339_S106,Tissue,outside,,,,,NA,,,,,,,,,S106,YI-339,MDL,no,no,no,ruberrimus.tissue,20,Y,202768
+YI.344,YI.344,MeredithDloop-YI-344_S107,Tissue,outside,,,,,NA,,,,,,,,,S107,YI-344,MDL,no,no,no,ruberrimus.tissue,20,Y,171457
+YI.409,YI.409,MeredithDloop-YI-409_S108,Tissue,outside,,,,,NA,,,,,,,,,S108,YI-409,MDL,no,no,no,ruberrimus.tissue,20,Y,315009
+YI.428,YI.428,MeredithDloop-YI-428_S109,Tissue,outside,,,,,NA,,,,,,,,,S109,YI-428,MDL,no,no,no,ruberrimus.tissue,20,Y,121160
+YI.433,YI.433,MeredithDloop-YI-433_S110,Tissue,outside,,,,,NA,,,,,,,,,S110,YI-433,MDL,no,no,no,ruberrimus.tissue,20,Y,593570
+YI.466,YI.466,MeredithDloop-YI-466_S111,Tissue,inside,,,,,NA,,,,,,,,,S111,YI-466,MDL,no,no,no,ruberrimus.tissue,20,Y,166833
+YI.543,YI.543,MeredithDloop-YI-543_S112,Tissue,inside,,,,,NA,,,,,,,,,S112,YI-543,MDL,no,no,no,ruberrimus.tissue,20,Y,511185
+YI.572,YI.572,MeredithDloop-YI-572_S113,Tissue,inside,,,,,NA,,,,,,,,,S113,YI-572,MDL,no,no,no,ruberrimus.tissue,20,Y,345960
+YI.648,YI.648,MeredithDloop-YI-648_S114,Tissue,inside,,,,,NA,,,,,,,,,S114,YI-648,MDL,no,no,no,ruberrimus.tissue,20,Y,641762

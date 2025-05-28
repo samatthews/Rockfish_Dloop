@@ -1,0 +1,32 @@
+Sample_ID,Library,samp_name,Sample_Name,Description,WaterSample,Basin,year,,extraction_date,extraction_tech,sample_num,Replication,Site,Location,Treatment,Replicate,Waypoint,Time of collection,Volume filtered (L),Basin,Taq,primer
+MDL-ocnms-2022-1,Misfits,2022-1,MDL-ocnms-2022-1,MDL-ocnms-2022-1,MDL-ocnms-2022-1,OC,2022,,1/22/24,SE/MB,1,n,Destruction Island,South,Kelp,1,DI DNA KELP S,14:15,2,OC,,MDL
+MDL-ocnms-2022-2,Misfits,2022-2,MDL-ocnms-2022-2,MDL-ocnms-2022-2,MDL-ocnms-2022-2,OC,2022,,1/22/24,SE/MB,2,n,Destruction Island,South,Kelp,2,DI DNA KELP S,14:25,1,OC,,MDL
+MDL-ocnms-2022-3,Misfits,2022-3,MDL-ocnms-2022-3,MDL-ocnms-2022-3,MDL-ocnms-2022-3,OC,2022,,1/22/24,SE/MB,3,n,Destruction Island,South,Kelp,3,DI DNA KELP S,14:28,1,OC,,MDL
+MDL-ocnms-2022-4,Misfits,2022-4,MDL-ocnms-2022-4,MDL-ocnms-2022-4,MDL-ocnms-2022-4,OC,2022,,1/22/24,SE/MB,4,n,Destruction Island,South,No kelp,1,DESTRU S5,14:35,1,OC,,MDL
+MDL-ocnms-2022-5,Misfits,2022-5,MDL-ocnms-2022-5,MDL-ocnms-2022-5,MDL-ocnms-2022-5,OC,2022,,1/22/24,SE/MB,5,n,Destruction Island,South,No kelp,2,DESTRU S5,14:37,1,OC,,MDL
+MDL-ocnms-2022-6,Misfits,2022-6,MDL-ocnms-2022-6,MDL-ocnms-2022-6,MDL-ocnms-2022-6,OC,2022,,1/22/24,SE/MB,6,n,Destruction Island,South,No kelp,3,DESTRU S5,14:46,1,OC,,MDL
+MDL-ocnms-2022-7,Misfits,2022-7,MDL-ocnms-2022-7,MDL-ocnms-2022-7,MDL-ocnms-2022-7,OC,2022,,1/22/24,SE/MB,7,n,Destruction Island,North,No kelp,1,DI DNA KELP N,15:10,1,OC,,MDL
+MDL-ocnms-2022-8,Misfits,2022-8,MDL-ocnms-2022-8,MDL-ocnms-2022-8,MDL-ocnms-2022-8,OC,2022,,1/22/24,SE/MB,8,n,Destruction Island,North,No kelp,2,DI DNA KELP N,15:15,1,OC,,MDL
+MDL-ocnms-2022-9,Misfits,2022-9,MDL-ocnms-2022-9,MDL-ocnms-2022-9,MDL-ocnms-2022-9,OC,2022,,1/22/24,SE/MB,9,n,Destruction Island,North,No kelp,3,DI DNA KELP N,15:20,1,OC,,MDL
+MDL-ocnms-2022-10,Misfits,2022-10,MDL-ocnms-2022-10,MDL-ocnms-2022-10,MDL-ocnms-2022-10,OC,2022,,1/22/24,SE/MB,10,n,Destruction Island,North,Kelp,1,DESTRU N5,15:25,1,OC,,MDL
+MDL-ocnms-2022-11,Misfits,2022-11,MDL-ocnms-2022-11,MDL-ocnms-2022-11,MDL-ocnms-2022-11,OC,2022,,1/22/24,SE/MB,11,n,Destruction Island,North,Kelp,2,DESTRU N5,15:28,1,OC,,MDL
+MDL-ocnms-2022-12,Misfits,2022-12,MDL-ocnms-2022-12,MDL-ocnms-2022-12,MDL-ocnms-2022-12,OC,2022,,1/22/24,SE/MB,12,n,Destruction Island,North,Kelp,3,DESTRU N5,15:32,1,OC,,MDL
+MDL-ocnms-2022-13,Misfits,2022-13,MDL-ocnms-2022-13,MDL-ocnms-2022-13,MDL-ocnms-2022-13,OC,2022,,1/22/24,SE/MB,13,n,Destruction Island,control,control,1,,none,1,OC,,MDL
+MDL-ocnms-2022-14,Misfits,2022-14,MDL-ocnms-2022-14,MDL-ocnms-2022-14,MDL-ocnms-2022-14,OC,2022,,1/22/24,SE/MB,14,n,Neah Bay,North,Kelp,1,Neah N5,1538,1,OC,,MDL
+MDL-ocnms-2022-15,Misfits,2022-15,MDL-ocnms-2022-15,MDL-ocnms-2022-15,MDL-ocnms-2022-15,OC,2022,,1/22/24,SE/MB,15,n,Neah Bay,North,Kelp,2,Neah N5,1541,1,OC,,MDL
+MDL-ocnms-2022-16,Misfits,2022-16,MDL-ocnms-2022-16,MDL-ocnms-2022-16,MDL-ocnms-2022-16,OC,2022,,1/22/24,SE/MB,16,n,Neah Bay,North,Kelp,3,Neah N5,1545,1,OC,,MDL
+MDL-ocnms-2022-17,Misfits,2022-17,MDL-ocnms-2022-17,MDL-ocnms-2022-17,MDL-ocnms-2022-17,OC,2022,,1/22/24,SE/MB,17,n,Neah Bay,North,No kelp,4,Neah DNA 10N,1553,1,OC,,MDL
+MDL-ocnms-2022-18,Misfits,2022-18,MDL-ocnms-2022-18,MDL-ocnms-2022-18,MDL-ocnms-2022-18,OC,2022,,1/22/24,SE/MB,18,n,Neah Bay,North,No kelp,5,Neah DNA 10N,1556,1,OC,,MDL
+MDL-ocnms-2022-19,Misfits,2022-19,MDL-ocnms-2022-19,MDL-ocnms-2022-19,MDL-ocnms-2022-19,OC,2022,,1/22/24,SE/MB,19,n,Neah Bay,North,No kelp,6,Neah DNA 10N,1559,1,OC,,MDL
+MDL-ocnms-2022-20,Misfits,2022-20,MDL-ocnms-2022-20,MDL-ocnms-2022-20,MDL-ocnms-2022-20,OC,2022,,1/22/24,SE/MB,20,n,Neah Bay,South ,Kelp,7,Neah S5,1606,1,OC,,MDL
+MDL-ocnms-2022-21,Misfits,2022-21,MDL-ocnms-2022-21,MDL-ocnms-2022-21,MDL-ocnms-2022-21,OC,2022,,1/22/24,SE/MB,21,n,Neah Bay,South ,Kelp,8,Neah S5,1608,1,OC,,MDL
+MDL-ocnms-2022-22,Misfits,2022-22,MDL-ocnms-2022-22,MDL-ocnms-2022-22,MDL-ocnms-2022-22,OC,2022,,1/22/24,SE/MB,22,n,Neah Bay,South ,Kelp,9,Neah S5,1610,1,OC,,MDL
+MDL-ocnms-2022-23,Misfits,2022-23,MDL-ocnms-2022-23,MDL-ocnms-2022-23,MDL-ocnms-2022-23,OC,2022,,1/22/24,SE/MB,23,n,Neah Bay,South ,No kelp,10,Neah DNA 10S,1614,1,OC,,MDL
+MDL-ntc-phusion,Misfits,,MDL-ntc-phusion,MDL-ntc-phusion,MDL-ntc-phusion,,,,,,,,NTC,NTC,phusion,,,,,NTC,phusion,MDL
+MDL-mock1-phusion-a,Misfits,,MDL-mock1-phusion-a,MDL-mock1-phusion-a,MDL-mock1-phusion-a,,,,,,,,mock,mock,phusion,,,,,mock,phusion,MDL
+MDL-mock1-phusion-b,Misfits,,MDL-mock1-phusion-b,MDL-mock1-phusion-b,MDL-mock1-phusion-b,,,,,,,,mock,mock,phusion,,,,,mock,phusion,MDL
+MDL-mock1-phusion-c,Misfits,,MDL-mock1-phusion-c,MDL-mock1-phusion-c,MDL-mock1-phusion-c,,,,,,,,mock,mock,phusion,,,,,mock,phusion,MDL
+MDL-mock1-platinum-a,Misfits,,MDL-mock1-platinum-a,MDL-mock1-platinum-a,MDL-mock1-platinum-a,,,,,,,,mock,mock,platinum,,,,,mock,platinum,MDL
+MDL-mock1-platinum-b,Misfits,,MDL-mock1-platinum-b,MDL-mock1-platinum-b,MDL-mock1-platinum-b,,,,,,,,mock,mock,platinum,,,,,mock,platinum,MDL
+MDL-mock1-platinum-c,Misfits,,MDL-mock1-platinum-c,MDL-mock1-platinum-c,MDL-mock1-platinum-c,,,,,,,,mock,mock,platinum,,,,,mock,platinum,MDL
+MDL-ntc-platinum,Misfits,,MDL-ntc-platinum,MDL-ntc-platinum,MDL-ntc-platinum,,,,,,,,NTC,NTC,platinum,,,,,NTC,platinum,MDL
