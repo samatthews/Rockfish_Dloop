@@ -4,6 +4,9 @@ output: html_document
 date: "2025-02-12"
 ---
 
+```{r}
+library(rstanarm)
+```
 
 Plot # of ASVs and/or # of species against sampling distance from bottom
 
@@ -15,7 +18,7 @@ sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Site %in% c(
 sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Basin %in% c("AI")] <- "Puget Sound"
 sample_data(field_curated_MDL)$Basin[sample_data(field_curated_MDL)$Basin %in% c("HC")] <- "Hood Canal"
 
-nsamples(field_curated_MDL)
+#nsamples(field_curated_MDL)
 table(sample_data(field_curated_MDL)$Instrument)
 
 sample_data(field_curated_MDL)$Observed_ASVs <- estimate_richness(field_curated_MDL, split= T, "Observed")$Observed
@@ -98,35 +101,40 @@ metadata_field_curated_MDL %>%
 
 summary(m1 <- glm(Observed_Species ~ Distance_from_bottom, family="poisson", data=metadata_field_curated_MDL))
 
-library(sandwich)
-cov.m1 <- vcovHC(m1, type="HC0")
-std.err <- sqrt(diag(cov.m1))
-r.est <- cbind(Estimate= coef(m1), "Robust SE" = std.err,
-"Pr(>|z|)" = 2 * pnorm(abs(coef(m1)/std.err), lower.tail=FALSE),
-LL = coef(m1) - 1.96 * std.err,
-UL = coef(m1) + 1.96 * std.err)
+##cover to run stan model and calculate credibility interval
+m1_bglm <- stan_glm(Observed_Species ~ Distance_from_bottom, family="poisson", data=metadata_field_curated_MDL)
+summary(m1_bglm, digits = 2, prob=c(.025, .5, .975))
 
-r.est
+m1_bglm <- stan_glm(Observed_Species ~ Distance_from_bottom, 
+                  data = metadata_field_curated_MDL,
+                  family = poisson(link = "log"), #this is the default for poisson
+                  seed = 123)
 
-with(m1, cbind(res.deviance = deviance, df = df.residual,
-  p = pchisq(deviance, df.residual, lower.tail=FALSE)))
 
-library(msm)
-#s <- deltamethod(list(~ exp(x1), ~ exp(x2), ~ exp(x3), ~ exp(x4)), 
-#                                                coef(m1), cov.m1)
+# Get coefficient estimates
+summary(m1_bglm)
 
-## exponentiate old estimates dropping the p values
-##rexp.est <- exp(r.est[, -3])
-## replace SEs with estimates for exponentiated coefficients
-#rexp.est[, "Robust SE"] <- s
+# Plot model diagnostics
+plot(m1_bglm)
 
-#rexp.est
+# Extract posterior samples
+posterior_samples <- as.matrix(m1_bglm)
 
-### 
-metadata_field_curated_MDL$predicted <- predict(m1, type="response")
+# get 95% CI for intercept and slope:
+posterior_interval(m1_bglm)
 
-## order by program and then by math
-#p <- p[with(p, order(prog, math)), ]
+#OR:
+# intercept
+quantile(posterior_samples[,1], probs = c(0.025, 0.975))
+# slope
+quantile(posterior_samples[,2], probs = c(0.025, 0.975))
+
+
+
+metadata_field_curated_MDL$predicted <- posterior_epred(m1_bglm) %>% colMeans() 
+metadata_field_curated_MDL$predicted_hi <- apply(posterior_epred(m1_bglm), MARGIN = 2, FUN = quantile, probs = 0.975)
+metadata_field_curated_MDL$predicted_lo <- apply(posterior_epred(m1_bglm), MARGIN = 2, FUN = quantile, probs = 0.025)
+
 
 ## create the plot
 ggplot(metadata_field_curated_MDL, aes(x = Distance_from_bottom, y = predicted)) +
@@ -135,11 +143,11 @@ ggplot(metadata_field_curated_MDL, aes(x = Distance_from_bottom, y = predicted))
   labs(x = "Distance from seafloor (m)", y = "Sebastes species")
 
 p <- metadata_field_curated_MDL %>% 
-  arrange(Instrument) %>%
+ # arrange(Instrument) %>%
  ggplot() + 
   geom_jitter(aes(x=Distance_from_bottom, y = Observed_Species, color = Instrument, shape = WaterColumnLoc), width = 1, height = 0.15, alpha = 0.45, size = 2) + 
   geom_line(aes(x = Distance_from_bottom, y = predicted), size = 1, color = "grey40") +
-  #  facet_wrap(.~PCR2.all.samples, scales = "free_x") + 
+  geom_ribbon(aes(x = Distance_from_bottom, ymin=predicted_lo, ymax=predicted_hi), linetype=2, alpha=0.3) +
   xlab("Distance from seafloor (m)") + 
   ylab("Sebastes species")+
    ggtitle("") + 
